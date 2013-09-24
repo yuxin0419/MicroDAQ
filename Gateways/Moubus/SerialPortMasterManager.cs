@@ -91,46 +91,69 @@ namespace MicroDAQ.Gateways.Modbus
                     }
                     else
                     {
-                        ushort high;
-                        ushort low;
-                        float value;
-                        string type=rows[j]["Arithmetic"].ToString().ToLower();
-                        switch (type)
+                        if (rows[j]["Arithmetic"].ToString().ToLower() == "getquantities")//换算成工程量-风速
                         {
-                            case "getfloatmsb":
-                                 high = values[index];
-                                 low = values[index + 1];
-                                 value = ModbusUtility.GetSingle(high, low);
-                                 break;
-
-                            case "getfloatlsb":
-                                 low = values[index];
-                                 high = values[index + 1];
-                                 value = ModbusUtility.GetSingle(high, low);
-                                 break;
-
-                            case "getuintmsb":
-                                 high = values[index];
-                                 low = values[index + 1];
-                                 value = ModbusUtility.GetUInt32(high, low);
-                                 break;
-
-                            case "getuintlsb":
-                                 low = values[index];
-                                 high = values[index + 1];
-                                 value = ModbusUtility.GetUInt32(high, low);
-                                 break;
-                            default:
-                                 value = 0;
-                                 break;
+                            double y;
+                            float fs;
+                            if (values[index] < 32768)
+                            {
+                                y = ((values[index] * 5) * 1000.0 / 4080000.0) / 240.0;
+                            }
+                            else
+                            {
+                                y=((65535-values[index] + 1) * 5) * 1000.0 / 4080000.0 / 240.0;
+                            }
+                            fs =Convert.ToSingle((y - 4) * (2 / 16));
+                            Items[flag].Value = fs;
+                            Items[flag].ID = Convert.ToInt32(rows[j]["Code"]);
+                            Items[flag].DataTime = DateTime.Now;
+                            Items[flag].State = ItemState.正常;
+                            index += 1;
 
                         }
-                       
-                        Items[flag].Value = value;
-                        Items[flag].ID = Convert.ToInt32(rows[j]["Code"]);
-                        Items[flag].DataTime = DateTime.Now;
-                        Items[flag].State = ItemState.正常;
-                        index += 2;
+                        else
+                        {
+                            ushort high;
+                            ushort low;
+                            float value;
+                            string type = rows[j]["Arithmetic"].ToString().ToLower();
+                            switch (type)
+                            {
+                                case "getfloatmsb":
+                                    high = values[index];
+                                    low = values[index + 1];
+                                    value = ModbusUtility.GetSingle(high, low);
+                                    break;
+
+                                case "getfloatlsb":
+                                    low = values[index];
+                                    high = values[index + 1];
+                                    value = ModbusUtility.GetSingle(high, low);
+                                    break;
+
+                                case "getuintmsb":
+                                    high = values[index];
+                                    low = values[index + 1];
+                                    value = ModbusUtility.GetUInt32(high, low);
+                                    break;
+
+                                case "getuintlsb":
+                                    low = values[index];
+                                    high = values[index + 1];
+                                    value = ModbusUtility.GetUInt32(high, low);
+                                    break;
+                                default:
+                                    value = 0;
+                                    break;
+
+                            }
+
+                            Items[flag].Value = value;
+                            Items[flag].ID = Convert.ToInt32(rows[j]["Code"]);
+                            Items[flag].DataTime = DateTime.Now;
+                            Items[flag].State = ItemState.正常;
+                            index += 2;
+                        }
                     }
                     flag += 1;
                 }

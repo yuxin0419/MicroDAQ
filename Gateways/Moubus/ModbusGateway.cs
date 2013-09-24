@@ -124,7 +124,7 @@ namespace MicroDAQ.Gateways.Modbus
         /// <returns></returns>
         private DataTable GetReadCommandsByID(string deviceID)
         {
-            string sqlStr = "select * from  ModbusCommands a left join RegisterType b on a.RegisterType=b.SerialID  where a.ModbusSlave_SerialID=" + "'" + deviceID + "'and b.registerName='HoldinGregister' or b.registerName='InputRegisters' ";
+            string sqlStr = "select * from  ModbusCommands a left join RegisterType b on a.RegisterType=b.SerialID  where a.ModbusSlave_SerialID=" + "'" + deviceID + "'and B.RegisterName<>'writeregister'";
             Connection.Open();
             SqlDataAdapter da = new SqlDataAdapter(sqlStr, Connection);
             DataSet ds = new DataSet();
