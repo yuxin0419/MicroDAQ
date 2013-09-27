@@ -211,14 +211,14 @@ namespace MicroDAQ
                             new DataColumn("PLC设备类型"),
                             new DataColumn("PLC状态"),
                             new DataColumn("PLC可信度")});
-                    if (Program.opcGateway.ItemManagers == null)
+                    if (Program.MobusGateway.SerialManagers == null)
                     {
                         MessageBox.Show("尚未加载plc数据！");
                         return;
                     }
                     else
                     {
-                        foreach (IDataItemManage mgr in Program.opcGateway.ItemManagers)
+                        foreach (SerialPortMasterManager mgr in Program.MobusGateway.SerialManagers)
                         {
                             foreach (Item item in mgr.Items)
                             {

@@ -9,6 +9,7 @@ using System.Net.Sockets;
 using System.IO.Ports;
 using JonLibrary.Automatic;
 using MicroDAQ.Common;
+using JonLibrary.Common;
 
 
 namespace MicroDAQ.Gateways.Modbus
@@ -21,7 +22,10 @@ namespace MicroDAQ.Gateways.Modbus
         public DataTable SerialMasterDevice;//通过Com口通讯的设备信息表
         public DataTable IPMasterGroup;
         public DataTable SerialMasterGroup;
+        public int count;//采集点数
+        public IniFile ini = null;
         /// <summary>
+        /// 
         /// 数据项管理器
         /// </summary>
         public List<SerialPortMasterManager> SerialManagers = new List<SerialPortMasterManager>();
@@ -36,7 +40,8 @@ namespace MicroDAQ.Gateways.Modbus
         public ModbusGateway(IList<IDatabaseManage> databaseManagers)
         {
             //string ConnectionString = "server=.\\SQLEXPRESS;database=opcmes3;uid=microdaq;pwd=microdaq";
-            string ConnectionString = @"server=192.168.1.201\SQL2000;database=opcmes3;uid=microdaq;pwd=microdaq";
+           // string ConnectionString = @"server=192.168.1.201\SQL2000;database=opcmes3;uid=microdaq;pwd=microdaq";
+            string ConnectionString = GetConnectiongStr();
             Connection = new SqlConnection(ConnectionString);
             this.DatabaseManagers = databaseManagers;
             UpdateCycle = new CycleTask();
@@ -47,7 +52,21 @@ namespace MicroDAQ.Gateways.Modbus
             SetTable();
             CreateIPDevice();
             CreatePortDevice();
+            count = GetCount();
 
+        }
+
+        private string GetConnectiongStr()
+        {
+            ini = new IniFile(AppDomain.CurrentDomain.BaseDirectory + "MicroDAQ.ini");
+            string[] dbName = ini.GetValue("Database", "Members").Trim().Split(',');
+            string address = ini.GetValue(dbName[0], "Address");
+            string database= ini.GetValue(dbName[0], "Database");
+            string username= ini.GetValue(dbName[0], "Username");
+            string password=ini.GetValue(dbName[0], "Password");
+            string con = string.Format("server={0};database={1};uid={2};pwd={3};",address,database,username,password);
+            return con;
+            
         }
 
         #region SQL查询,全局变量DataTable赋值
@@ -158,6 +177,11 @@ namespace MicroDAQ.Gateways.Modbus
             Connection.Close();
             return ds.Tables[0];
         }
+        /// <summary>
+        /// 控制指令
+        /// </summary>
+        /// <param name="deviceID"></param>
+        /// <returns></returns>
         private DataTable GetWriteCommandsByID(string deviceID)
         {
             string sqlStr = "select * from modubs_control a where a.SerialID=" + "'" + deviceID + "'";
@@ -177,6 +201,18 @@ namespace MicroDAQ.Gateways.Modbus
 
             Connection.Close();
             return ds.Tables[0];
+        }
+        /// <summary>
+        /// 采集点数
+        /// </summary>
+        /// <returns></returns>
+        private int GetCount()
+        {
+            string sqlStr = "select count(*) from MetaData ";
+            Connection.Open();
+            SqlCommand cmd = new SqlCommand(sqlStr, Connection);
+            return Convert.ToInt32(cmd.ExecuteScalar());
+
         }
         #endregion
 
@@ -488,10 +524,10 @@ namespace MicroDAQ.Gateways.Modbus
         /// </summary>
         public override void Start()
         {
-            //ErgodicManagers();
-            //Update();
+           
             ModbusCycle.Run(this.ErgodicManagers, System.Threading.ThreadPriority.BelowNormal);
             UpdateCycle.Run(this.Update, System.Threading.ThreadPriority.BelowNormal);
+          
 
         }
         #endregion

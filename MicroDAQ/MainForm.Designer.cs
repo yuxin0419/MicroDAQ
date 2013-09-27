@@ -48,6 +48,7 @@
             this.退出EToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitter1 = new System.Windows.Forms.Splitter();
             this.splitter2 = new System.Windows.Forms.Splitter();
+            this.tsslthread = new System.Windows.Forms.ToolStripStatusLabel();
             ((System.ComponentModel.ISupportInitialize)(this.pcb)).BeginInit();
             this.stspMain.SuspendLayout();
             this.cmsNI.SuspendLayout();
@@ -89,12 +90,12 @@
             this.stspMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.tsslProject,
             this.tsslVersion,
+            this.tsslthread,
             this.tsslMeters,
             this.tsslUpdate,
             this.tsslRemote,
             this.tsslPLC,
-            this.tssddbPLC,
-            this.toolStripStatusLabel1});
+            this.tssddbPLC});
             this.stspMain.Location = new System.Drawing.Point(0, 253);
             this.stspMain.Name = "stspMain";
             this.stspMain.Size = new System.Drawing.Size(476, 26);
@@ -200,6 +201,13 @@
             this.splitter2.TabIndex = 9;
             this.splitter2.TabStop = false;
             // 
+            // tsslthread
+            // 
+            this.tsslthread.BorderSides = System.Windows.Forms.ToolStripStatusLabelBorderSides.Right;
+            this.tsslthread.Name = "tsslthread";
+            this.tsslthread.Size = new System.Drawing.Size(72, 21);
+            this.tsslthread.Text = "线程状态：";
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -251,5 +259,6 @@
         private System.Windows.Forms.ToolStripStatusLabel tsslPLC;
         private System.Windows.Forms.ToolStripDropDownButton tssddbPLC;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
+        private System.Windows.Forms.ToolStripStatusLabel tsslthread;
     }
 }

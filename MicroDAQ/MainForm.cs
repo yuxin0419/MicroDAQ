@@ -151,7 +151,9 @@ namespace MicroDAQ
 
             Program.MobusGateway = new ModbusGateway(createDBManagers());
             Program.MobusGateway.Start();
-
+            this.tsslMeters.Text = "采集点："+Program.MobusGateway.count;
+            this.tsslthread.Text="线程状态："+ Program.MobusGateway.ModbusCycle.State.ToString();
+                
         }
 
 

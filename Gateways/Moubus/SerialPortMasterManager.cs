@@ -6,6 +6,7 @@ using Modbus.Utility;
 using System.Data;
 using System.Data.SqlClient;
 using MicroDAQ.Common;
+using JonLibrary.Common;
 namespace MicroDAQ.Gateways.Modbus
 {
     public class SerialPortMasterManager
@@ -16,6 +17,7 @@ namespace MicroDAQ.Gateways.Modbus
         DataTable dtCommands;
         string  device_ID;
         byte slaveAddress;
+        IniFile ini;
         public SqlConnection Connection { get; set; }
         /// <summary>
         /// 构造函数 初始化变量
@@ -26,7 +28,8 @@ namespace MicroDAQ.Gateways.Modbus
         /// <param name="metaData"></param>
         public SerialPortMasterManager(IModbusMaster master, int slave, DataTable commandsData, DataTable metaData, string deviceID)
         {
-            string ConnectionString = "server=VWINTECH-201\\SQL2000;database=opcmes3;uid=sa;pwd= ";
+           // string ConnectionString = "server=VWINTECH-201\\SQL2000;database=opcmes3;uid=sa;pwd= ";
+            string ConnectionString = GetConnectiongStr();
             Connection = new SqlConnection(ConnectionString);
             SerialMaster = master;
             master.Transport.ReadTimeout = 300;
@@ -76,6 +79,7 @@ namespace MicroDAQ.Gateways.Modbus
                         Items[flag].DataTime = DateTime.Now;
                         Items[flag].State = ItemState.仪表掉线;
                         flag = flag + 1;
+                        Items[flag].Quality = 0;
                     }
                         continue;
                 }
@@ -87,6 +91,7 @@ namespace MicroDAQ.Gateways.Modbus
                         Items[flag].ID = Convert.ToInt32(rows[j]["Code"]);
                         Items[flag].DataTime = DateTime.Now;
                         Items[flag].State = ItemState.正常;
+                        Items[flag].Quality = 192;
                         index += 1;
                     }
                     else
@@ -108,6 +113,7 @@ namespace MicroDAQ.Gateways.Modbus
                             Items[flag].ID = Convert.ToInt32(rows[j]["Code"]);
                             Items[flag].DataTime = DateTime.Now;
                             Items[flag].State = ItemState.正常;
+                            Items[flag].Quality = 192;
                             index += 1;
 
                         }
@@ -152,6 +158,7 @@ namespace MicroDAQ.Gateways.Modbus
                             Items[flag].ID = Convert.ToInt32(rows[j]["Code"]);
                             Items[flag].DataTime = DateTime.Now;
                             Items[flag].State = ItemState.正常;
+                            Items[flag].Quality = 192;
                             index += 2;
                         }
                     }
@@ -173,23 +180,29 @@ namespace MicroDAQ.Gateways.Modbus
                     ushort[] shorts;
                     if (type == "WLT")
                     {
+                        switch (value)
+                        {
+                            case 1:
+                                shorts = new ushort[4] { 0, 0, 0, 1 };
+                                break;
+                            case 2:
+                                shorts = new ushort[4] { 0, 0, 1, 0 };
+                                break;
+                            case 4:
+                                shorts = new ushort[4] { 0, 1, 0, 0 };
+                                break;
+                            case 8:
+                                shorts = new ushort[4] { 1, 0, 0, 0 };
+                                break;
+                            case 12:
+                                shorts = new ushort[4] { 1, 1, 0, 0 };
+                                break;
+                            default:
+                                shorts = new ushort[4] { 0, 0, 0, 0 };
+                                break;
 
-                        if (value == 1)
-                        {
-                            shorts = new ushort[4] { 1, 0, 0, 0 };
                         }
-                        else if (value == 2)
-                        {
-                            shorts = new ushort[4] { 0, 1, 0, 0 };
-                        }
-                        else if (value == 4)
-                        {
-                            shorts = new ushort[4] { 0, 0, 1, 0 };
-                        }
-                        else
-                        {
-                            shorts = new ushort[4] { 1, 0, 0, 1 };
-                        }
+                       
                         SerialMaster.WriteMultipleRegisters(slaveAddress, adress, shorts);
                     }
                     else
@@ -253,6 +266,18 @@ namespace MicroDAQ.Gateways.Modbus
             int i = command.ExecuteNonQuery();
             Connection.Close();
             return i;
+        }
+        private string GetConnectiongStr()
+        {
+            ini = new IniFile(AppDomain.CurrentDomain.BaseDirectory + "MicroDAQ.ini");
+            string[] dbName = ini.GetValue("Database", "Members").Trim().Split(',');
+            string address = ini.GetValue(dbName[0], "Address");
+            string database = ini.GetValue(dbName[0], "Database");
+            string username = ini.GetValue(dbName[0], "Username");
+            string password = ini.GetValue(dbName[0], "Password");
+            string con = string.Format("server={0};database={1};uid={2};pwd={3};", address, database, username, password);
+            return con;
+
         }
     }
 }
