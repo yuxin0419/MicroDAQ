@@ -9,7 +9,7 @@ using MicroDAQ.Common;
 using JonLibrary.Common;
 namespace MicroDAQ.Gateways.Modbus
 {
-    public class SerialPortMasterManager
+    public class SerialPortDevice
     {
         public IList<Item> Items { get; set; }
         IModbusMaster SerialMaster;
@@ -26,7 +26,7 @@ namespace MicroDAQ.Gateways.Modbus
         /// <param name="slave"></param>
         /// <param name="commandsData"></param>
         /// <param name="metaData"></param>
-        public SerialPortMasterManager(IModbusMaster master, int slave, DataTable commandsData, DataTable metaData, string deviceID)
+        public SerialPortDevice(IModbusMaster master, int slave, DataTable commandsData, DataTable metaData, string deviceID)
         {
            // string ConnectionString = "server=VWINTECH-201\\SQL2000;database=opcmes3;uid=sa;pwd= ";
             string ConnectionString = GetConnectiongStr();

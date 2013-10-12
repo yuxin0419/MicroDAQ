@@ -9,7 +9,7 @@ using Modbus.Utility;
 
 namespace MicroDAQ.Gateways.Modbus
 {
-    public class IPMasterManager
+    public class IPDevice
     {
         public IList<Item> Items { get; set; }
         ModbusIpMaster IpMaster;
@@ -18,7 +18,7 @@ namespace MicroDAQ.Gateways.Modbus
         string device_ID;
         byte slaveAddress;
         public SqlConnection Connection { get; set; }
-        public IPMasterManager(ModbusIpMaster master, int slave, DataTable commandsData, DataTable metaData,  string deviceID)
+        public IPDevice(ModbusIpMaster master, int slave, DataTable commandsData, DataTable metaData,  string deviceID)
         {
             string ConnectionString = "server=VWINTECH-201\\SQL2000;database=opcmes3;uid=sa;pwd= ";
             Connection = new SqlConnection(ConnectionString);

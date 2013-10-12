@@ -28,8 +28,8 @@ namespace MicroDAQ.Gateways.Modbus
         /// 
         /// 数据项管理器
         /// </summary>
-        public List<SerialPortMasterManager> SerialManagers = new List<SerialPortMasterManager>();
-        public List<IPMasterManager> IPManagers = new List<IPMasterManager>();
+        public List<SerialPortDevice> SerialManagers = new List<SerialPortDevice>();
+        public List<IPDevice> IPManagers = new List<IPDevice>();
 
         /// <summary>
         /// 数据库管理器
@@ -366,7 +366,7 @@ namespace MicroDAQ.Gateways.Modbus
                                 {
                                     metaData = GetMetaByID(commandData);
                                 }
-                                IPMasterManager manager = new IPMasterManager(master, slave, commandData, metaData, deviceID);
+                                IPDevice manager = new IPDevice(master, slave, commandData, metaData, deviceID);
                                 IPManagers.Add(manager);
 
 
@@ -400,7 +400,7 @@ namespace MicroDAQ.Gateways.Modbus
                                 {
                                     metaData = GetMetaByID(commandData);
                                 }
-                                SerialPortMasterManager manager = new SerialPortMasterManager(master, slave, commandData, metaData, deviceID);
+                                SerialPortDevice manager = new SerialPortDevice(master, slave, commandData, metaData, deviceID);
                                 SerialManagers.Add(manager);
 
                                 row = row + 1;
@@ -444,7 +444,7 @@ namespace MicroDAQ.Gateways.Modbus
                         {
                             metaData = GetMetaByID(commandData);
                         }
-                        SerialPortMasterManager manager = new SerialPortMasterManager(master, slave, commandData, metaData, deviceID);
+                        SerialPortDevice manager = new SerialPortDevice(master, slave, commandData, metaData, deviceID);
                         SerialManagers.Add(manager);
 
                         row = row + 1;
@@ -476,7 +476,7 @@ namespace MicroDAQ.Gateways.Modbus
         {
             foreach (IDatabaseManage dbMgr in this.DatabaseManagers)
             {
-                foreach (SerialPortMasterManager mgr in this.SerialManagers)
+                foreach (SerialPortDevice mgr in this.SerialManagers)
                 {
                     foreach (Item item in mgr.Items)
                     {
@@ -491,7 +491,7 @@ namespace MicroDAQ.Gateways.Modbus
             }
             foreach (IDatabaseManage dbMgr in this.DatabaseManagers)
             {
-                foreach (IPMasterManager mgr in this.IPManagers)
+                foreach (IPDevice mgr in this.IPManagers)
                 {
                     foreach (Item item in mgr.Items)
                     {
@@ -510,10 +510,10 @@ namespace MicroDAQ.Gateways.Modbus
         #region 遍历数据项管理器
         public void ErgodicManagers()
         {
-            foreach (SerialPortMasterManager manager in this.SerialManagers)
+            foreach (SerialPortDevice manager in this.SerialManagers)
                 manager.ReadWriteData();
 
-            foreach (IPMasterManager manager in this.IPManagers)
+            foreach (IPDevice manager in this.IPManagers)
                 manager.Read();
         }
         #endregion

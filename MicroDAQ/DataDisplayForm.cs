@@ -146,7 +146,7 @@ namespace MicroDAQ
                     for (int i = 0; i < dtUnion.Rows.Count; i++)
                     {
                         DataRow tmpRow = dtUnion.Rows[i];
-                        foreach (SerialPortMasterManager mgr in Program.MobusGateway.SerialManagers)
+                        foreach (SerialPortDevice mgr in Program.MobusGateway.SerialManagers)
                         {
                             foreach (Item meter in mgr.Items)
                             {
@@ -218,7 +218,7 @@ namespace MicroDAQ
                     }
                     else
                     {
-                        foreach (SerialPortMasterManager mgr in Program.MobusGateway.SerialManagers)
+                        foreach (SerialPortDevice mgr in Program.MobusGateway.SerialManagers)
                         {
                             foreach (Item item in mgr.Items)
                             {
