@@ -8,11 +8,13 @@ namespace MicroDAQ.Specifical
 {
     class Controller : JonLibrary.OPC.Machine
     {
-        List<int> IDList;
+       public  List<int> IDList;
+       public  string[] remoteCtrl;
         public Controller(string Name, string[] Ctrl, List<int> idList)
         {
             this.Name = Name;
-            ItemCtrl = Ctrl;
+           // ItemCtrl = Ctrl;
+            remoteCtrl = Ctrl;
             IDList = idList;
             
         }

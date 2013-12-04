@@ -117,12 +117,19 @@ namespace MicroDAQ.Gateway
         {
             try
             {
+                List<string> itemCtrl = new List<string>();
                 DataRow[] Rows = this.DatabaseManagers[0].GetRemoteControl();
                 if (Rows != null)
+                {
 
                     //MessageBox.Show((row["cycle"].ToString() != null).ToString());
                     foreach (var mt in Program.MeterManager.CTMeters.Values)
+                    {
+                       
+                    }
+
                         mt.SetCommand(Rows);
+                }
                     
                 System.Threading.Thread.Sleep(500);
             }

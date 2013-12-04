@@ -93,10 +93,6 @@ namespace MicroDAQ
                 DataTable dt = sqlite.ExecuteQuery(strSql);
                 DataRow[] dtRead = dt.Select("cmdtype='read'");
                 DataRow[] dtwrite = dt.Select("cmdtype='write'");
-                wordItemFormat = ini.GetValue(opcServerType, "WordItemFormat");
-                wordArrayItemFormat = ini.GetValue(opcServerType, "WordArrayItemFormat");
-                realItemFormat = ini.GetValue(opcServerType, "RealItemFormat");
-                realArrayItemFormat = ini.GetValue(opcServerType, "RealItemFormat");
                 createCtrl(dtwrite);
                 for (int j = 0; j < Plcs.Count; j++)
                 {
@@ -104,29 +100,11 @@ namespace MicroDAQ
                     List<int> list = new List<int>();
                     for (int i = 0; i < dtRead.Length; i++)
                     {
-                        plc.ItemsID.Add(Convert.ToInt32(dtRead[i]["id"]));
-                        string type = dtRead[i]["type"].ToString();
-                        int length = Convert.ToInt32(dtRead[i]["length"]);
-                        string strDB = dtRead[i]["dbadress"].ToString();
-                        int strat = Convert.ToInt32(dtRead[i]["start"]);
+                        plc.ItemsID.Add(Convert.ToInt32(dtRead[i]["id"]));                      
+                        string strDB = dtRead[i]["dbadress"].ToString();                     
                         plc.ItemsData.Add(plc.Connection +strDB);
 
-                        //switch (type.ToLower())
-                        //{
-                        //    case "word":
-                        //        plc.ItemsData.Add(plc.Connection + string.Format(wordItemFormat, strDB, strat, length));
-                        //        break;
-                        //    case "wordarray":
-                        //        plc.ItemsData.Add(plc.Connection + string.Format(wordArrayItemFormat, strDB, strat, length));
-                        //        break;
-                        //    case "real":
-                        //        plc.ItemsData.Add(plc.Connection + string.Format(realItemFormat, strDB, strat, length));
-                        //        break;
-                        //    case "realarray":
-                        //        plc.ItemsData.Add(plc.Connection + string.Format(realArrayItemFormat, strDB, strat, length));
-                        //        break;
-                        //}
-
+                       
                     }
 
                 }
@@ -309,29 +287,10 @@ namespace MicroDAQ
                 List<int> idList = new List<int>();
                 for (int i = 0; i < drWrite.Length; i++)
                 {
-                    idList.Add(Convert.ToInt32(drWrite[i]["id"]));
-                    string type = drWrite[i]["type"].ToString();
-                    int length = Convert.ToInt32(drWrite[i]["length"]);
+                    idList.Add(Convert.ToInt32(drWrite[i]["id"]));               
                     string strDB = drWrite[i]["dbadress"].ToString();
-                    int strat = Convert.ToInt32(drWrite[i]["start"]);
-
-
-                    switch (type.ToLower())
-                    {
-                        case "word":
-                           strl.Add(plc.Connection + string.Format(wordItemFormat, strDB, strat, length));
-                            break;
-                        case "wordarray":
-                            strl.Add(plc.Connection + string.Format(wordArrayItemFormat, strDB, strat, length));
-                            break;
-                        case "real":
-                            strl.Add(plc.Connection + string.Format(realItemFormat, strDB, strat, length));
-                            break;
-                        case "realarray":
-                            strl.Add(plc.Connection + string.Format(realArrayItemFormat, strDB, strat, length));
-                            break;
-                    }
-                   
+                    strl.Add(plc.Connection + strDB);
+                                     
                 }
                 string[] dbStrl=new string[strl.Count];
                 strl.CopyTo(dbStrl, 0);
