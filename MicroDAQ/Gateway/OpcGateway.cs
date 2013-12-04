@@ -119,17 +119,11 @@ namespace MicroDAQ.Gateway
             {
                 DataRow[] Rows = this.DatabaseManagers[0].GetRemoteControl();
                 if (Rows != null)
-                    foreach (var row in Rows)
-                    {
-                        //MessageBox.Show((row["cycle"].ToString() != null).ToString());
-                        foreach (var mt in Program.MeterManager.CTMeters.Values)
-                            mt.SetCommand(++running % ushort.MaxValue,
-                                          int.Parse(row["id"].ToString()),
-                                          int.Parse(row["command"].ToString()),
-                                          int.Parse((row["cycle"] != null) ? (row["cycle"].ToString()) : ("0"))
-                                          );
-                        Thread.Sleep(500);
-                    }
+
+                    //MessageBox.Show((row["cycle"].ToString() != null).ToString());
+                    foreach (var mt in Program.MeterManager.CTMeters.Values)
+                        mt.SetCommand(Rows);
+                    
                 System.Threading.Thread.Sleep(500);
             }
             catch (Exception ex)
@@ -143,6 +137,7 @@ namespace MicroDAQ.Gateway
 
         public override void Start()
         {
+           
             UpdateCycle.Run(this.Update, System.Threading.ThreadPriority.BelowNormal);
             RemoteCtrlCycle.Run(this.remoteCtrl, System.Threading.ThreadPriority.BelowNormal);
         }

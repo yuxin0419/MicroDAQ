@@ -83,7 +83,7 @@ namespace MicroDAQ.Database
         SqlDataAdapter getRemoteAdapter;
         DataRow[] result = null;
         public DataRow[] GetRemoteControl()
-        {
+         {
             try
             {
                 switch (GetdataConnection.State)
@@ -202,7 +202,8 @@ namespace MicroDAQ.Database
                                 UpdateConnection.Close();
                                 break;
                             case ConnectionState.Closed:
-                                UpdateConnection.Open();
+                               
+                                    UpdateConnection.Open();
                                 break;
                         }
                     }

@@ -87,12 +87,16 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Data.SQLite">
+      <HintPath>Dynamic\System.Data.SQLite.dll</HintPath>
+    </Reference>
     <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DBUtility\SQLiteHelper.cs" />
     <Compile Include="Specifical\DataState.cs" />
     <Compile Include="Specifical\DataType.cs" />
     <Compile Include="Specifical\RunningState.cs" />

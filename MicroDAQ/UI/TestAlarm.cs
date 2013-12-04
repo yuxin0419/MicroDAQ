@@ -65,19 +65,6 @@ namespace MicroDAQ.UI
         int runningNum = 0;
 
         int ctrlIndex = 0;
-        private void tmrRemoteCtrl_Tick(object sender, EventArgs e)
-        {
-            if (this.alarms.Count > 0)
-            {
-                AlarmControl alarm = this.alarms[ctrlIndex % this.alarms.Count];
-                ctrlIndex++;
-                foreach (var mt in Program.MeterManager.CTMeters.Values)
-                {
-                    runningNum = ++runningNum % ushort.MaxValue;
-                    mt.SetCommand(runningNum, alarm.Slave, 1, (int)alarm.AlertCode);
-                }
-            }
-        }
 
         private void TestAlarm_FormClosing(object sender, FormClosingEventArgs e)
         {

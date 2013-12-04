@@ -335,25 +335,6 @@ namespace MicroDAQ.Specifical
         }
         int runningNum = 0;
         int ctrlIndex = 0;
-        private void tmrRemoteCtrl_Tick(object sender, EventArgs e)
-        {
-            if (this.alarms.Count > 0)
-            {
-                if (ctrlIndex > 0)
-                    this.alarms[(ctrlIndex - 1) % this.alarms.Count].Highlight = false;
-
-                AlarmControl alarm = this.alarms[ctrlIndex % this.alarms.Count];
-                alarm.Highlight = true;
-
-                foreach (var mt in Program.MeterManager.CTMeters.Values)
-                {
-                    runningNum = ++runningNum % ushort.MaxValue;
-                    mt.SetCommand(runningNum, alarm.Slave, 1, (int)alarm.AlertCode);
-                }
-                Console.WriteLine(ctrlIndex);
-                ctrlIndex = ++ctrlIndex % short.MaxValue;
-            }
-        }
         #endregion
         private void FormDemo_FormClosing(object sender, FormClosingEventArgs e)
         {

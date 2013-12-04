@@ -17,6 +17,7 @@ using MicroDAQ.Gateway;
 using log4net;
 using System.Data.SqlClient;
 using MicroDAQ.Specifical;
+using MicroDAQ.DBUtility;
 
 namespace MicroDAQ
 {
@@ -30,6 +31,7 @@ namespace MicroDAQ
         private string wordItemFormat;
         private string wordArrayItemFormat;
         private string realItemFormat;
+        private string realArrayItemFormat;
 
         private List<PLCStationInformation> Plcs;
         private OpcOperate.Sync.OPCServer SyncOpc;
@@ -80,7 +82,62 @@ namespace MicroDAQ
             }
             ni.Text = this.Text;
         }
+        private bool Config()
+        {
+            bool success = false;
+            try
+            {
+                string dbFile = "sqlite.db";
+                SQLiteHelper sqlite = new SQLiteHelper(dbFile);
+                string strSql = "select * from DBconfig";
+                DataTable dt = sqlite.ExecuteQuery(strSql);
+                DataRow[] dtRead = dt.Select("cmdtype='read'");
+                DataRow[] dtwrite = dt.Select("cmdtype='write'");
+                wordItemFormat = ini.GetValue(opcServerType, "WordItemFormat");
+                wordArrayItemFormat = ini.GetValue(opcServerType, "WordArrayItemFormat");
+                realItemFormat = ini.GetValue(opcServerType, "RealItemFormat");
+                realArrayItemFormat = ini.GetValue(opcServerType, "RealItemFormat");
+                createCtrl(dtwrite);
+                for (int j = 0; j < Plcs.Count; j++)
+                {
+                    PLCStationInformation plc = Plcs[j];
+                    List<int> list = new List<int>();
+                    for (int i = 0; i < dtRead.Length; i++)
+                    {
+                        plc.ItemsID.Add(Convert.ToInt32(dtRead[i]["id"]));
+                        string type = dtRead[i]["type"].ToString();
+                        int length = Convert.ToInt32(dtRead[i]["length"]);
+                        string strDB = dtRead[i]["dbadress"].ToString();
+                        int strat = Convert.ToInt32(dtRead[i]["start"]);
+                        plc.ItemsData.Add(plc.Connection +strDB);
 
+                        //switch (type.ToLower())
+                        //{
+                        //    case "word":
+                        //        plc.ItemsData.Add(plc.Connection + string.Format(wordItemFormat, strDB, strat, length));
+                        //        break;
+                        //    case "wordarray":
+                        //        plc.ItemsData.Add(plc.Connection + string.Format(wordArrayItemFormat, strDB, strat, length));
+                        //        break;
+                        //    case "real":
+                        //        plc.ItemsData.Add(plc.Connection + string.Format(realItemFormat, strDB, strat, length));
+                        //        break;
+                        //    case "realarray":
+                        //        plc.ItemsData.Add(plc.Connection + string.Format(realArrayItemFormat, strDB, strat, length));
+                        //        break;
+                        //}
+
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error(ex);
+                success = false;
+            }
+           return  success= true;
+        }
         /// <summary>
         /// 读取配置
         /// </summary>
@@ -218,11 +275,12 @@ namespace MicroDAQ
             {
                 foreach (var plc in Plcs)
                 {
-                    string[] head = new string[plc.ItemsHead.Count];
-                    string[] data = new string[plc.ItemsHead.Count];
-                    plc.ItemsHead.CopyTo(head, 0);
+                    //string[] head = new string[plc.ItemsHead.Count];
+                    string[] data = new string[plc.ItemsData.Count];
+                   // plc.ItemsHead.CopyTo(head, 0);
                     plc.ItemsData.CopyTo(data, 0);
-                    IDataItemManage dim = new DataItemManager("ItemData", head, data);
+                    IList<int> IDlist=plc.ItemsID;
+                    IDataItemManage dim = new DataItemManager("ItemData",  data, IDlist);
                     listDataItemManger.Add(dim);
                 }
 
@@ -238,21 +296,53 @@ namespace MicroDAQ
                 return null;
         }
 
-
-        private void createCtrl()
+        /// <summary>
+        /// 控制指令
+        /// </summary>
+        private void createCtrl(DataRow[] drWrite)
         {
             string pid = ini.GetValue(opcServerType, "ProgramID");
-            int i = 0;
-            foreach (var plc in Plcs)
+            int j = 0;
+            foreach(var plc in Plcs)
             {
-                Controller MetersCtrl = new Controller("MetersCtrl",
+                List<string> strl = new List<string>();
+                List<int> idList = new List<int>();
+                for (int i = 0; i < drWrite.Length; i++)
+                {
+                    idList.Add(Convert.ToInt32(drWrite[i]["id"]));
+                    string type = drWrite[i]["type"].ToString();
+                    int length = Convert.ToInt32(drWrite[i]["length"]);
+                    string strDB = drWrite[i]["dbadress"].ToString();
+                    int strat = Convert.ToInt32(drWrite[i]["start"]);
 
-                                        new string[] { plc.Connection + string.Format(wordArrayItemFormat, 2, 100, 5) },
-                                        new string[] { plc.Connection + string.Format(wordArrayItemFormat, 2, 120, 5) }
-                                      );
-                Program.MeterManager.CTMeters.Add(90 + i++, MetersCtrl);
+
+                    switch (type.ToLower())
+                    {
+                        case "word":
+                           strl.Add(plc.Connection + string.Format(wordItemFormat, strDB, strat, length));
+                            break;
+                        case "wordarray":
+                            strl.Add(plc.Connection + string.Format(wordArrayItemFormat, strDB, strat, length));
+                            break;
+                        case "real":
+                            strl.Add(plc.Connection + string.Format(realItemFormat, strDB, strat, length));
+                            break;
+                        case "realarray":
+                            strl.Add(plc.Connection + string.Format(realArrayItemFormat, strDB, strat, length));
+                            break;
+                    }
+                   
+                }
+                string[] dbStrl=new string[strl.Count];
+                strl.CopyTo(dbStrl, 0);
+                Controller MetersCtrl = new Controller("MetersCtrl", dbStrl,idList);
+                Program.MeterManager.CTMeters.Add(90 + j++, MetersCtrl);
                 MetersCtrl.Connect(pid, "127.0.0.1");
+               
             }
+           
+           
+            
         }
 
 
@@ -287,21 +377,15 @@ namespace MicroDAQ
         }
         public void Start()
         {
-            Thread.Sleep(Program.waitMillionSecond);
+            //Thread.Sleep(Program.waitMillionSecond);
             SyncOpc = new OPCServer();
             string pid = ini.GetValue(opcServerType, "ProgramID");
-            if (SyncOpc.Connect(pid, "127.0.0.1"))
-                if (ReadConfig())
-                    if (CreateItems())
-                    {
-                        createCtrl();
-                        Program.opcGateway = new OpcGateway(createItemsMangers(), createDBManagers());
-                        Program.opcGateway.StateChanged += new EventHandler(opcGateway_StateChanged);
-                        Program.opcGateway.UpdateCycle.WorkStateChanged += new CycleTask.WorkStateChangeEventHandle(UpdateCycle_WorkStateChanged);
-                        Program.opcGateway.RemoteCtrlCycle.WorkStateChanged += new CycleTask.WorkStateChangeEventHandle(RemoteCtrlCycle_WorkStateChanged);
-                        Program.opcGateway.Start(pid);
-                    }
-
+            Config();
+            Program.opcGateway = new OpcGateway(createItemsMangers(), createDBManagers());
+            Program.opcGateway.StateChanged += new EventHandler(opcGateway_StateChanged);
+            Program.opcGateway.UpdateCycle.WorkStateChanged += new CycleTask.WorkStateChangeEventHandle(UpdateCycle_WorkStateChanged);
+            Program.opcGateway.RemoteCtrlCycle.WorkStateChanged += new CycleTask.WorkStateChangeEventHandle(RemoteCtrlCycle_WorkStateChanged);
+            Program.opcGateway.Start(pid);
         }
 
         void opcGateway_StateChanged(object sender, EventArgs e)
@@ -319,14 +403,11 @@ namespace MicroDAQ
                         {
                             ToolStripMenuItem tsiPLC = new ToolStripMenuItem(plc.Connection);
                             this.tsddbPLC.DropDownItems.Add(tsiPLC);
-                            for (int i = 0; i < plc.ItemsNumber.Length; i++)
-                            {
-                                ToolStripMenuItem tsiItemGrop = new ToolStripMenuItem(string.Format("第{0}对DB块", i + 1));
+                           
+                                ToolStripMenuItem tsiItemGrop = new ToolStripMenuItem(string.Format("共{0}个DB块", plc.ItemsData.Count));
                                 tsiPLC.DropDownItems.Add(tsiItemGrop);
 
-                                tsiItemGrop.DropDownItems.Add(string.Format("10字节监测点数：{0}", plc.ItemsNumber[i].SmallItems));
-                                tsiItemGrop.DropDownItems.Add(string.Format("20字节监测点数：{0}", plc.ItemsNumber[i].BigItems));
-                            }
+                            
                         }
                     }
                 }));

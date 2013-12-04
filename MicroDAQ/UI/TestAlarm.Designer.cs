@@ -80,7 +80,7 @@
             // 
             this.tmrRemoteCtrl.Enabled = true;
             this.tmrRemoteCtrl.Interval = 1000;
-            this.tmrRemoteCtrl.Tick += new System.EventHandler(this.tmrRemoteCtrl_Tick);
+           // this.tmrRemoteCtrl.Tick += new System.EventHandler(this.tmrRemoteCtrl_Tick);
             // 
             // TestAlarm
             // 

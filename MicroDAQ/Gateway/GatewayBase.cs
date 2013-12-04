@@ -62,5 +62,6 @@ namespace MicroDAQ.Gateway
         /// </summary>
         /// <returns></returns>
         public event EventHandler StateChanged;
+        
     }
 }

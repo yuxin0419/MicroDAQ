@@ -8,22 +8,39 @@ namespace MicroDAQ.Specifical
 {
     class Controller : JonLibrary.OPC.Machine
     {
-        public Controller(string Name, string[] Ctrl, string[] State)
+        List<int> IDList;
+        public Controller(string Name, string[] Ctrl, List<int> idList)
         {
             this.Name = Name;
             ItemCtrl = Ctrl;
-            ItemStatus = State;
+            IDList = idList;
+            
         }
-        public bool SetCommand(int runningNumber, int MeterID, int Cmd, int cmdValue)
+        public bool SetCommand(DataRow[] remoteControl)
         {
-            ushort[] value = new ushort[5];
-            value[0] = (ushort)(runningNumber & 0xFFFF);
-            value[1] = (ushort)(MeterID & 0xFFFF);
-            value[2] = (ushort)(Cmd & 0xFFFF);
-            value[3] = (ushort)(cmdValue & 0xFFFF);
-            value[4] = (ushort)(10 & 0xFFFF);
+            object[] values=new object[IDList.Count];
+           
+            for (int i = 0; i < IDList.Count; i++)
+            {
+                foreach(DataRow row in remoteControl)
+                {
+                    ushort[] value = new ushort[1];
+                    if (Convert.ToInt32(row["id"]) == IDList[i])
+                    {
+                        value[0] =Convert.ToUInt16(row["cycle"]);
+                        values[i] = value[0];
+                    }
+                   
+                }
+            }
+            return PLC.Write(GROUP_NAME_CTRL,values);
 
-            return PLC.Write(GROUP_NAME_CTRL, new object[] { value });
+
+
+
+
+
+               
         }
 
         protected override void PLC_DataChange(string groupName, int[] item, object[] value, short[] Qualities)

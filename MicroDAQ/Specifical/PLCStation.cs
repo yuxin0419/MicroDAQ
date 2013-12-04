@@ -57,10 +57,12 @@ namespace MicroDAQ.Specifical
         /// </summary>
         public IList<string> ItemsData { get; set; }
 
+        public IList<int> ItemsID { get; set; }
         public PLCStationInformation()
         {
             ItemsHead = new List<string>();
             ItemsData = new List<string>();
+            ItemsID = new List<int>();
         }
 
         /// <summary>

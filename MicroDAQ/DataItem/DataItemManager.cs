@@ -13,21 +13,24 @@ namespace MicroDAQ.DataItem
     /// 数量项管理器
     /// </summary>
     public class DataItemManager : IDataItemManage
-    {
+    {   
         public IList<Item> Items { get; set; }
         public ConnectionState ConnectionState { get; set; }
         public Dictionary<int, Item> ItemPair = null;
+        public IList<int> idlist;
         /// <summary>
         /// 使用由指定的xx建立管理器
         /// </summary>
         /// <param name="name"></param>
         /// <param name="dataHead"></param>
         /// <param name="data"></param>
-        public DataItemManager(string name, string[] dataHead, string[] data)
+        public DataItemManager(string name, string[] data ,IList<int> IDlist)
             : base()
         {
-            machine = new DataItem(this, name, dataHead, data);
-            int count = (dataHead.Length < data.Length) ? (dataHead.Length) : (data.Length);
+            idlist = IDlist;
+            machine = new DataItem(this, name, data,IDlist);
+           // int count = (dataHead.Length < data.Length) ? (dataHead.Length) : (data.Length);
+            int count = data.Length;
             Items = new List<Item>();
             ItemPair = new Dictionary<int, Item>();
             for (int i = 0; i < count; i++)
@@ -42,13 +45,14 @@ namespace MicroDAQ.DataItem
         class DataItem : Machine
         {
             DataItemManager Manager;
-
-            public DataItem(DataItemManager manager, string name, string[] dataHead, string[] data)
+            public IList<int> idlist;
+            public DataItem(DataItemManager manager, string name, string[] data,IList<int> IDlist)
                 : base()
             {
+                idlist = IDlist;
                 this.Manager = manager;
                 this.Name = Name;
-                ItemCtrl = dataHead;
+               // ItemCtrl = dataHead;
                 ItemStatus = data;
 
             }
@@ -57,11 +61,11 @@ namespace MicroDAQ.DataItem
             {
                 bool success = true;
                 success &= PLC.Connect(OpcServerProgramID, OPCServerIP);
-                success &= PLC.AddGroup(GROUP_NAME_CTRL, 1, 0);
-                success &= PLC.AddItems(GROUP_NAME_CTRL, ItemCtrl);
+                //success &= PLC.AddGroup(GROUP_NAME_CTRL, 1, 0);
+               // success &= PLC.AddItems(GROUP_NAME_CTRL, ItemCtrl);
                 success &= PLC.AddGroup(GROUP_NAME_STATE, 1, 0);
                 success &= PLC.AddItems(GROUP_NAME_STATE, ItemStatus);
-                PLC.SetState(GROUP_NAME_CTRL, true);
+                //PLC.SetState(GROUP_NAME_CTRL, true);
                 PLC.SetState(GROUP_NAME_STATE, true);
                 ConnectionState = (success) ? (ConnectionState.Open) : (ConnectionState.Closed);
                 return success;
@@ -71,35 +75,46 @@ namespace MicroDAQ.DataItem
             protected override void PLC_DataChange(string groupName, int[] item, object[] value, short[] Qualities)
             {
                 base.PLC_DataChange(groupName, item, value, Qualities);
-                switch (groupName)
+                for (int i = 0; i < item.Length; i++)
                 {
-                    case GROUP_NAME_CTRL:
-                        for (int i = 0; i < item.Length; i++)
-                        {
-                            ushort[] val = null;
-                            if (value[i] != null)
-                            {
-                                val = (ushort[])value[i];
-                                Manager.Items[item[i]].ID = val[0];
-                                Manager.Items[item[i]].Type = (DataType)val[1];
-                                Manager.Items[item[i]].State = (DataState)val[2];
-                                Manager.Items[item[i]].Quality = Qualities[i];
-                                Manager.UpdateItemPair(Manager.Items[item[i]].ID, Manager.Items[item[i]]);
-                            }
-                        }
-                        break;
-                    case GROUP_NAME_STATE:
-                        for (int i = 0; i < item.Length; i++)
-                        {
-                            if (value[i] != null)
-                            {
-                                Manager.Items[item[i]].Value = (float)value[i];
-                                Manager.Items[item[i]].Quality = Qualities[i];
-                            }
-                        }
-                        break;
+                    ushort val;
+                    if (value[i] != null)
+                    {
+                        val = (ushort)value[i];
+                        Manager.Items[item[i]].Value = val;
+                        Manager.Items[item[i]].ID = idlist[i];
+
+                    }
                 }
-                OnStatusChannge();
+                    //switch (groupName)
+                    //{
+                    //    case GROUP_NAME_CTRL:
+                    //        for (int i = 0; i < item.Length; i++)
+                    //        {
+                    //            ushort[] val = null;
+                    //            if (value[i] != null)
+                    //            {
+                    //                val = (ushort[])value[i];
+                    //                Manager.Items[item[i]].ID = val[0];
+                    //                Manager.Items[item[i]].Type = (DataType)val[1];
+                    //                Manager.Items[item[i]].State = (DataState)val[2];
+                    //                Manager.Items[item[i]].Quality = Qualities[i];
+                    //                Manager.UpdateItemPair(Manager.Items[item[i]].ID, Manager.Items[item[i]]);
+                    //            }
+                    //        }
+                    //        break;
+                    //    case GROUP_NAME_STATE:
+                    //        for (int i = 0; i < item.Length; i++)
+                    //        {
+                    //            if (value[i] != null)
+                    //            {
+                    //                Manager.Items[item[i]].Value = (float)value[i];
+                    //                Manager.Items[item[i]].Quality = Qualities[i];
+                    //            }
+                    //        }
+                    //        break;
+                    //}
+                    OnStatusChannge();
             }
 
 
