@@ -20,22 +20,13 @@ namespace MicroDAQ.Specifical
         }
         public bool SetCommand(DataRow[] remoteControl)
         {
-            object[] values=new object[IDList.Count];
-           
-            for (int i = 0; i < IDList.Count; i++)
+            object[] values=new object[remoteControl.Length];
+            for (int i = 0; i < values.Length; i++)
             {
-                foreach(DataRow row in remoteControl)
-                {
-                    ushort[] value = new ushort[1];
-                    if (Convert.ToInt32(row["id"]) == IDList[i])
-                    {
-                        value[0] =Convert.ToUInt16(row["cycle"]);
-                        values[i] = value[0];
-                    }
-                   
-                }
+                values[i] = remoteControl[i]["cycle"];
             }
-            return PLC.Write(GROUP_NAME_CTRL,values);
+
+                return PLC.Write(GROUP_NAME_CTRL, values);
 
 
 

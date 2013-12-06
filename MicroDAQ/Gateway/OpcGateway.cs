@@ -117,22 +117,35 @@ namespace MicroDAQ.Gateway
         {
             try
             {
-                List<string> itemCtrl = new List<string>();
                 DataRow[] Rows = this.DatabaseManagers[0].GetRemoteControl();
                 if (Rows != null)
                 {
 
-                    //MessageBox.Show((row["cycle"].ToString() != null).ToString());
-                    foreach (var mt in Program.MeterManager.CTMeters.Values)
+                    foreach (Controller mt in Program.MeterManager.CTMeters.Values)
                     {
-                       
+                        string[] itemCtrl = new string[Rows.Length];
+                        for (int i = 0; i < Rows.Length; i++)
+                        {
+
+                            for (int j = 0; j < mt.IDList.Count; j++)
+                            {
+                                if (Convert.ToInt32(Rows[i]["id"]) == mt.IDList[j])
+                                {
+                                    itemCtrl[i] = mt.remoteCtrl[j];
+                                }
+                            }
+                        }
+                        mt.ItemCtrl = itemCtrl;
+                        mt.Connect("Matrikon.OPC.Universal", "127.0.0.1");
+                        mt.SetCommand(Rows);
                     }
 
-                        mt.SetCommand(Rows);
+                       
                 }
                     
-                System.Threading.Thread.Sleep(500);
+            System.Threading.Thread.Sleep(500);
             }
+
             catch (Exception ex)
             {
                 //MessageBox.Show(ex.ToString());
