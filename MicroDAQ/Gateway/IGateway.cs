@@ -6,7 +6,7 @@ namespace MicroDAQ.Gateway
 {
     interface IGateway : IDisposable
     {
-        void Start();
+        void Start(object pid);
         void Pause();
         void Continue();
         void Stop();

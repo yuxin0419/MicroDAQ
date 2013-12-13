@@ -28,12 +28,9 @@ namespace MicroDAQ
         /// </summary>
         string opcServerType = "SimaticNet";
 
-        private string wordItemFormat;
-        private string wordArrayItemFormat;
-        private string realItemFormat;
-        private string realArrayItemFormat;
 
-        private List<PLCStationInformation> Plcs;
+       // private List<PLCStationInformation> Plcs;
+        PLCStationInformation plc;
         private OpcOperate.Sync.OPCServer SyncOpc;
         IniFile ini = null;
 
@@ -42,7 +39,7 @@ namespace MicroDAQ
         {
             log = LogManager.GetLogger(this.GetType());
             InitializeComponent();
-            Plcs = new List<PLCStationInformation>();
+           // Plcs = new List<PLCStationInformation>();
         }
 
         private void Form2_Load(object sender, EventArgs e)
@@ -61,13 +58,6 @@ namespace MicroDAQ
                 autoStart = bool.Parse(ini.GetValue("AutoRun", "AutoStart"));
                 int plcCount = int.Parse(ini.GetValue("PLCConfig", "Amount"));
                 opcServerType = ini.GetValue("OpcServer", "Type").Trim();
-                for (int i = 0; i < plcCount; i++)
-                {
-                    PLCStationInformation plc = new PLCStationInformation();
-                    Plcs.Add(plc);
-                    plc.Connection = string.Format(ini.GetValue(opcServerType, "ConnectionString"), i + 1);
-
-                }
 
 
             }
@@ -89,25 +79,15 @@ namespace MicroDAQ
             {
                 string dbFile = "sqlite.db";
                 SQLiteHelper sqlite = new SQLiteHelper(dbFile);
-                string strSql = "select * from DBconfig";
-                DataTable dt = sqlite.ExecuteQuery(strSql);
-                DataRow[] dtRead = dt.Select("cmdtype='read'");
-                DataRow[] dtwrite = dt.Select("cmdtype='write'");
-                createCtrl(dtwrite);
-                for (int j = 0; j < Plcs.Count; j++)
-                {
-                    PLCStationInformation plc = Plcs[j];
-                    List<int> list = new List<int>();
-                    for (int i = 0; i < dtRead.Length; i++)
-                    {
-                        plc.ItemsID.Add(Convert.ToInt32(dtRead[i]["id"]));                      
-                        string strDB = dtRead[i]["dbadress"].ToString();                     
-                        plc.ItemsData.Add(plc.Connection +strDB);
-
-                       
-                    }
-
-                }
+                string strSql = "select * from opcGateway ";
+                int id =Convert.ToInt32(sqlite.ExecuteScalar(strSql));
+                string strDBSql = "select * from DBconfig where OPCGateway_serialID="+id;
+                DataTable dt = sqlite.ExecuteQuery(strDBSql);
+                DataRow[] dtRead = dt.Select("accessibility<>'write'");
+                DataRow[] dtwrite = dt.Select("accessibility<>'read'");
+                createCtrlItem(dtwrite);
+                CreateReadItem(dtRead);               
+                
             }
             catch (Exception ex)
             {
@@ -116,132 +96,43 @@ namespace MicroDAQ
             }
            return  success= true;
         }
-        /// <summary>
-        /// 读取配置
-        /// </summary>
-        private bool ReadConfig()
+
+        private void CreateReadItem(DataRow[] dtRead)
         {
-            bool success = false;
-            try
+            plc = new PLCStationInformation();
+            List<int> list = new List<int>();
+            for (int i = 0; i < dtRead.Length; i++)
             {
-                //读取Item地址格式           
-                string[] getPairsConfigItems = new string[Plcs.Count];
-                wordItemFormat = ini.GetValue(opcServerType, "WordItemFormat");
-                wordArrayItemFormat = ini.GetValue(opcServerType, "WordArrayItemFormat");
-                realItemFormat = ini.GetValue(opcServerType, "RealItemFormat");
-                if (SyncOpc.AddGroup("ConfigGroups"))
-                {
-                    #region 是否多组,有几组
-                    //生成读取是否多组,有几组的Item地址
-                    for (int i = 0; i < Plcs.Count; i++)
-                    {
-                        getPairsConfigItems[i] = Plcs[i].Connection + string.Format(wordArrayItemFormat, 1, 26, 2);
-                    }
-                    //获取是否多组的数据,并转存到PlcStation列表里
-                    int[] itemHandle = new int[Plcs.Count];
-                    object[] values = new object[Plcs.Count];
-                    if (SyncOpc.AddItems("ConfigGroups", getPairsConfigItems, itemHandle))
-                    {
-                        foreach (string item in getPairsConfigItems)
-                            log.Info(item);
-
-                        SyncOpc.SyncRead("ConfigGroups", values, itemHandle);
-                        for (int i = 0; i < Plcs.Count; i++)
-                        {
-                            ushort[] value = (ushort[])values[i];
-                            Plcs[i].MorePair = (value[0] == 2) ? (true) : false;
-                            Plcs[i].PairsNumber = value[1];
-                        }
-                    }
-                    #endregion
-
-                    #region 每个PLC中每个DB组有多少监测点
-                    //读取配置监测点数量的Item,每个PLC的DB1,W30,W32|W34,W36|W38....
-                    //生成读取配置监测点数量的Items
-                    string[][] getItemsNumber = null;   //第一维为PlcStation编号,第二维为数量组的编号
-                    getItemsNumber = new string[Plcs.Count][];
-                    for (int i = 0; i < Plcs.Count; i++)
-                    {
-                        getItemsNumber[i] = new string[Plcs[i].PairsNumber];
-                        for (int j = 0; j < Plcs[i].PairsNumber; j++)
-                        {
-                            getItemsNumber[i][j] = Plcs[i].Connection + string.Format(wordArrayItemFormat, 1, 30 + j * 4, 2);
-                        }
-                    }
-                    //获取每个PLC中,每个DB组中存放的监测点数量
-                    for (int i = 0; i < Plcs.Count; i++)
-                    {
-                        itemHandle = new int[Plcs[i].PairsNumber];
-                        values = new object[Plcs[i].PairsNumber];
-
-                        foreach (string item in getItemsNumber[i])
-                            log.Info(item);
-                        if (SyncOpc.AddItems("ConfigGroups", getItemsNumber[i], itemHandle))
-                        {
-                           
-                            SyncOpc.SyncRead("ConfigGroups", values, itemHandle);
-                            //取1个PLC中的每个DB组中存放的监测点数量
-                            for (int j = 0; j < Plcs[i].PairsNumber; j++)
-                            {
-                                ushort[] value = (ushort[])values[j];
-                                Plcs[i].ItemsNumber[j].SmallItems = value[0];
-                                Plcs[i].ItemsNumber[j].BigItems = value[1];
-                            }
-                        }
-                    }
-                    #endregion
-                    success = true;
-                }
+                plc.ItemsID.Add(Convert.ToInt32(dtRead[i]["code"]));
+                string strDB = dtRead[i]["address"].ToString();
+                plc.ItemsData.Add(strDB);
 
             }
-            catch (Exception ex)
-            {
-                log.Error(ex);
-                success = false;
-            }
-            return success;
         }
+
         /// <summary>
-        /// 创建Items项
+        /// 控制指令
         /// </summary>
-        private bool CreateItems()
+        private void createCtrlItem(DataRow[] drWrite)
         {
-            bool success = false;
-            try
+            int j = 0;
+
+            List<string> strl = new List<string>();
+            List<int> idList = new List<int>();
+            for (int i = 0; i < drWrite.Length; i++)
             {
-                //遍历所有PLC
-                for (int i = 0; i < Plcs.Count; i++)
-                {
-                    PLCStationInformation plc = Plcs[i];
-                    //遍历PLC中所有DB组
-                    for (int j = 0; j < plc.ItemsNumber.Length; j++)
-                    {
-                        PLCStationInformation.ConfigItemsNumber num = plc.ItemsNumber[j];
+                idList.Add(Convert.ToInt32(drWrite[i]["code"]));
+                string strDB = drWrite[i]["address"].ToString();
+                strl.Add(strDB);
 
-                        //根据20字节监测点数量生成Item地址
-                        for (int k = 0; k < num.BigItems; k++)
-                        {
-                            plc.ItemsHead.Add(plc.Connection + string.Format(wordArrayItemFormat, 4 + j * 2, 20 * k, 3));
-                            plc.ItemsData.Add(plc.Connection + string.Format(realItemFormat, 4 + j * 2, 20 * k + 10));
-                        }
-
-                        //根据10字节监测点数量生成Item地址
-                        for (int k = 0; k < num.SmallItems; k++)
-                        {
-                            plc.ItemsHead.Add(plc.Connection + string.Format(wordArrayItemFormat, 3 + j * 2, 10 * k, 3));
-                            plc.ItemsData.Add(plc.Connection + string.Format(realItemFormat, 3 + j * 2, 10 * k + 6));
-                        }
-
-                    }
-                }
-                success = true;
             }
-            catch (Exception ex)
-            {
-                log.Error(ex);
-            }
-            return success;
+            string[] dbStrl = new string[strl.Count];
+            strl.CopyTo(dbStrl, 0);
+            Controller MetersCtrl = new Controller("MetersCtrl", dbStrl, idList);
+            Program.MeterManager.CTMeters.Add(90 + j++, MetersCtrl);
+
         }
+       
         /// <summary>
         /// 创建数据项管理器
         /// </summary>
@@ -250,17 +141,13 @@ namespace MicroDAQ
             bool success = false;
             IList<IDataItemManage> listDataItemManger = new List<IDataItemManage>();
             try
-            {
-                foreach (var plc in Plcs)
-                {
-                    //string[] head = new string[plc.ItemsHead.Count];
+            {                          
                     string[] data = new string[plc.ItemsData.Count];
-                   // plc.ItemsHead.CopyTo(head, 0);
                     plc.ItemsData.CopyTo(data, 0);
                     IList<int> IDlist=plc.ItemsID;
                     IDataItemManage dim = new DataItemManager("ItemData",  data, IDlist);
                     listDataItemManger.Add(dim);
-                }
+               
 
                 success = true;
             }
@@ -274,35 +161,7 @@ namespace MicroDAQ
                 return null;
         }
 
-        /// <summary>
-        /// 控制指令
-        /// </summary>
-        private void createCtrl(DataRow[] drWrite)
-        {
-            string pid = ini.GetValue(opcServerType, "ProgramID");
-            int j = 0;
-            foreach(var plc in Plcs)
-            {
-                List<string> strl = new List<string>();
-                List<int> idList = new List<int>();
-                for (int i = 0; i < drWrite.Length; i++)
-                {
-                    idList.Add(Convert.ToInt32(drWrite[i]["id"]));               
-                    string strDB = drWrite[i]["dbadress"].ToString();
-                    strl.Add(plc.Connection + strDB);
-                                     
-                }
-                string[] dbStrl=new string[strl.Count];
-                strl.CopyTo(dbStrl, 0);
-                Controller MetersCtrl = new Controller("MetersCtrl", dbStrl,idList);
-                Program.MeterManager.CTMeters.Add(90 + j++, MetersCtrl);
-               // MetersCtrl.Connect(pid, "127.0.0.1");
-               
-            }
-           
-           
-            
-        }
+      
 
 
         private IList<IDatabaseManage> createDBManagers()
@@ -344,7 +203,7 @@ namespace MicroDAQ
             Program.opcGateway.StateChanged += new EventHandler(opcGateway_StateChanged);
             Program.opcGateway.UpdateCycle.WorkStateChanged += new CycleTask.WorkStateChangeEventHandle(UpdateCycle_WorkStateChanged);
             Program.opcGateway.RemoteCtrlCycle.WorkStateChanged += new CycleTask.WorkStateChangeEventHandle(RemoteCtrlCycle_WorkStateChanged);
-            Program.opcGateway.Start(pid);
+            Program.opcGateway.StartButton(pid);
         }
 
         void opcGateway_StateChanged(object sender, EventArgs e)
@@ -358,8 +217,7 @@ namespace MicroDAQ
                     {
                         //添加获取采集点的数量
                         this.tsddbPLC.DropDownItems.Clear();
-                        foreach (PLCStationInformation plc in Plcs)
-                        {
+                       
                             ToolStripMenuItem tsiPLC = new ToolStripMenuItem(plc.Connection);
                             this.tsddbPLC.DropDownItems.Add(tsiPLC);
                            
@@ -367,7 +225,7 @@ namespace MicroDAQ
                                 tsiPLC.DropDownItems.Add(tsiItemGrop);
 
                             
-                        }
+                        
                     }
                 }));
             }

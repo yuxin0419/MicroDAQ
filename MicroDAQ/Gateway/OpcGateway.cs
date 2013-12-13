@@ -113,14 +113,14 @@ namespace MicroDAQ.Gateway
 
         }
         int running;
-        public void remoteCtrl()
+        public void remoteCtrl(object pid)
         {
             try
             {
                 DataRow[] Rows = this.DatabaseManagers[0].GetRemoteControl();
                 if (Rows != null)
                 {
-
+                    //添加有控制指令的DB块（筛选）
                     foreach (Controller mt in Program.MeterManager.CTMeters.Values)
                     {
                         string[] itemCtrl = new string[Rows.Length];
@@ -136,7 +136,7 @@ namespace MicroDAQ.Gateway
                             }
                         }
                         mt.ItemCtrl = itemCtrl;
-                        mt.Connect("Matrikon.OPC.Universal", "127.0.0.1");
+                        mt.Connect(pid.ToString(), "127.0.0.1");
                         mt.SetCommand(Rows);
                     }
 
@@ -155,21 +155,22 @@ namespace MicroDAQ.Gateway
 
         #region Start()
 
-        public override void Start()
+        public override void Start(object pid)
         {
            
             UpdateCycle.Run(this.Update, System.Threading.ThreadPriority.BelowNormal);
-            RemoteCtrlCycle.Run(this.remoteCtrl, System.Threading.ThreadPriority.BelowNormal);
+            RemoteCtrlCycle.Run(this.remoteCtrl,pid,System.Threading.ThreadPriority.BelowNormal);
+            
         }
 
         /// <summary>
         /// 启动
         /// </summary>
-        public void Start(string pid)
+        public void StartButton(string pid)
         {
             foreach (var manager in this.ItemManagers)
                 manager.Connect(pid, "127.0.0.1");
-            Start();
+            Start(pid);
         }
         #endregion
 

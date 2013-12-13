@@ -24,7 +24,7 @@ namespace MicroDAQ.Gateway
         /// <summary>
         /// 启动
         /// </summary>
-        public abstract void Start();
+        public abstract void Start(object pid);
         /// <summary>
         /// 暂停
         /// </summary>
