@@ -77,43 +77,16 @@ namespace MicroDAQ.DataItem
                 base.PLC_DataChange(groupName, item, value, Qualities);
                 for (int i = 0; i < item.Length; i++)
                 {
-                    ushort val;
+                    float val;
                     if (value[i] != null)
                     {
-                        val = (ushort)value[i];
+                        val =Convert.ToSingle(value[i]);
                         Manager.Items[item[i]].Value = val;
-                        Manager.Items[item[i]].ID = idlist[i];
+                        Manager.Items[item[i]].ID = idlist[item[i]];
 
                     }
                 }
-                    //switch (groupName)
-                    //{
-                    //    case GROUP_NAME_CTRL:
-                    //        for (int i = 0; i < item.Length; i++)
-                    //        {
-                    //            ushort[] val = null;
-                    //            if (value[i] != null)
-                    //            {
-                    //                val = (ushort[])value[i];
-                    //                Manager.Items[item[i]].ID = val[0];
-                    //                Manager.Items[item[i]].Type = (DataType)val[1];
-                    //                Manager.Items[item[i]].State = (DataState)val[2];
-                    //                Manager.Items[item[i]].Quality = Qualities[i];
-                    //                Manager.UpdateItemPair(Manager.Items[item[i]].ID, Manager.Items[item[i]]);
-                    //            }
-                    //        }
-                    //        break;
-                    //    case GROUP_NAME_STATE:
-                    //        for (int i = 0; i < item.Length; i++)
-                    //        {
-                    //            if (value[i] != null)
-                    //            {
-                    //                Manager.Items[item[i]].Value = (float)value[i];
-                    //                Manager.Items[item[i]].Quality = Qualities[i];
-                    //            }
-                    //        }
-                    //        break;
-                    //}
+                    
                     OnStatusChannge();
             }
 

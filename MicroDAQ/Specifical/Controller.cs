@@ -18,22 +18,51 @@ namespace MicroDAQ.Specifical
             IDList = idList;
             
         }
+        int running;
         public bool SetCommand(DataRow[] remoteControl)
         {
+            
             object[] values=new object[remoteControl.Length];
+           
             for (int i = 0; i < values.Length; i++)
             {
-                values[i] = remoteControl[i]["cycle"];
+                if (remoteControl[i]["plc"].ToString() == "1200")
+                {
+                    ushort[] shortValues = new ushort[5];
+                    shortValues[0] = (ushort)(++running % ushort.MaxValue);
+                    shortValues[1] = Convert.ToUInt16(remoteControl[i]["id"]);
+                    shortValues[2] = Convert.ToUInt16(remoteControl[i]["command"]);
+                    shortValues[3] = Convert.ToUInt16(remoteControl[i]["cycle"]);
+                    shortValues[4] = (ushort)10;
+                    values[i] = shortValues;
+                }
+                else
+                {
+                    ushort shortValue = Convert.ToUInt16(remoteControl[i]["cycle"]);
+                    values[i] = shortValue;
+                }
+               
             }
 
                 return PLC.Write(GROUP_NAME_CTRL, values);
-
-
-
-
-
-
                
+        }
+        public bool SetCommand(DataRow remoteControl)
+        {
+            object[] values = new object[1];
+
+            for (int i = 0; i < values.Length; i++)
+            {
+                ushort[] shorts = new ushort[5];
+                shorts[0] = (ushort)(++running % ushort.MaxValue);
+                shorts[1] = Convert.ToUInt16(remoteControl["id"]);
+                shorts[2] = Convert.ToUInt16(remoteControl["command"]);
+                shorts[3] = Convert.ToUInt16(remoteControl["cycle"]);
+                shorts[4] = (ushort)10;
+                values[i] = shorts;
+            }
+
+            return PLC.Write(GROUP_NAME_CTRL, values);
         }
 
         protected override void PLC_DataChange(string groupName, int[] item, object[] value, short[] Qualities)

@@ -259,7 +259,8 @@ namespace OpcOperate.ASync
                     {
                         OPCITEMRESULT result = (OPCITEMRESULT)Marshal.PtrToStructure(pos, typeof(OPCITEMRESULT));
                         //itemsID[i] = result.hServer;
-                        resultItemID.Add(itemsName[i], result.hServer);
+                        if (!resultItemID.ContainsKey(itemsName[i]))
+                            resultItemID.Add(itemsName[i], result.hServer);
                         pos = new IntPtr(pos.ToInt32() + Marshal.SizeOf(typeof(OPCITEMRESULT)));
                     }
                     else

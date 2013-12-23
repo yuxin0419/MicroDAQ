@@ -118,12 +118,13 @@ namespace MicroDAQ.Gateway
             try
             {
                 DataRow[] Rows = this.DatabaseManagers[0].GetRemoteControl();
-                if (Rows != null)
+                if (Rows != null && Rows.Length !=0)
                 {
-                    //添加有控制指令的DB块（筛选）
+                    //添加有控制指令的DB块（筛选,排序）
                     foreach (Controller mt in Program.MeterManager.CTMeters.Values)
                     {
                         string[] itemCtrl = new string[Rows.Length];
+                       
                         for (int i = 0; i < Rows.Length; i++)
                         {
 
@@ -132,12 +133,32 @@ namespace MicroDAQ.Gateway
                                 if (Convert.ToInt32(Rows[i]["id"]) == mt.IDList[j])
                                 {
                                     itemCtrl[i] = mt.remoteCtrl[j];
+                                    break;
+                                   
                                 }
                             }
                         }
                         mt.ItemCtrl = itemCtrl;
                         mt.Connect(pid.ToString(), "127.0.0.1");
                         mt.SetCommand(Rows);
+                        //控制指令用相同的DB块
+                        //if (itemCtrl.Length >= 2 && itemCtrl[0] == itemCtrl[1])
+                        //{
+                        //    string[] sameItem = new string[] { itemCtrl[0] };
+                        //    mt.ItemCtrl = sameItem;
+                        //    mt.Connect(pid.ToString(), "127.0.0.1");
+                        //    foreach (var row in Rows)
+                        //    {
+                        //        mt.SetCommand(row);
+                        //    }
+                        //}
+                        //控制指令用不同的DB块
+                        //else 
+                        //{
+                        //    mt.ItemCtrl = itemCtrl;
+                        //    mt.Connect(pid.ToString(), "127.0.0.1");
+                        //    mt.SetCommand(Rows);
+                        //}
                     }
 
                        
