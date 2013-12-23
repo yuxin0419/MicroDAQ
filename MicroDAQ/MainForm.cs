@@ -84,14 +84,9 @@ namespace MicroDAQ
                 string strDBSql = "select * from DBconfig where OPCGateway_serialID="+id;
                 DataTable dt = sqlite.ExecuteQuery(strDBSql);
                 int plcCount = int.Parse(ini.GetValue("PLCConfig", "Amount"));
-                DataRow[] dtRead = dt.Select("accessibility<>'write'");
-                for (int i = 0; i < plcCount; i++)
-                {
-                    DataRow[] dtwrite = dt.Select("accessibility<>'read' and plc="+i+1);
-                    createCtrlItem(dtwrite);
-                }
-               
-               
+                DataRow[] dtRead = dt.Select("accessibility<>'write'");        
+                DataRow[] dtwrite = dt.Select("accessibility<>'read'");
+                createCtrlItem(dtwrite);
                 CreateReadItem(dtRead);               
                 
             }
