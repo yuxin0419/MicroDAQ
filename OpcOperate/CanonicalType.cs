@@ -62,6 +62,10 @@ namespace OpcOperate
             string[] portions;
             short value = 0;
             portions = System.Text.RegularExpressions.Regex.Split(itemID, ",");
+            if (portions.Length == 1)
+            {
+               return  value = 11;
+            }
             portions[1] = (string)System.Text.RegularExpressions.Regex.Match(portions[1], "^[A-Z]+").ToString();
 
             if (portions.Length == 2)
