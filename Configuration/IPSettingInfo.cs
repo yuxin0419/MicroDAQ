@@ -7,10 +7,12 @@ using System;
 using System.Data;
 using System.Net;
 using System.Net.Sockets;
+using log4net;
 namespace MicroDAQ.Configuration
 {
     public class IPSettingInfo
     {
+        ILog log;
         public long serialID;
         public string iP;
         public int port;
@@ -31,15 +33,21 @@ namespace MicroDAQ.Configuration
             this.iP = dt[0]["ip"].ToString();
             this.port = Convert.ToInt32(dt[0]["port"]);
             this.enable = dt[0]["enable"].ToString();
-       
-            string[] strIP = iP.Split('.');
-            byte[] byteIP = new byte[4];
-            for (int i = 0; i < strIP.Length; i++)
+            try
             {
-                byteIP[i] = Convert.ToByte(strIP[i]);
+                string[] strIP = iP.Split('.');
+                byte[] byteIP = new byte[4];
+                for (int i = 0; i < strIP.Length; i++)
+                {
+                    byteIP[i] = Convert.ToByte(strIP[i]);
+                }
+                IPAddress address = new IPAddress(byteIP);
+                this.tcpClient = new TcpClient(address.ToString(), port);
             }
-            IPAddress address = new IPAddress(byteIP);
-            this.tcpClient  = new TcpClient(address.ToString(), port);
+            catch (Exception ex)
+            {
+                log.Error(new Exception("运行期间出现一个错误！", ex));
+            }
            
         }
 

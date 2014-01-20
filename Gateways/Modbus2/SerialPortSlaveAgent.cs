@@ -9,10 +9,12 @@ using MicroDAQ.Common;
 using MicroDAQ.Configuration;
 using System.Data;
 using JonLibrary.Common;
+using log4net;
 namespace MicroDAQ.Gateways.Modbus2
 {
     public class SerialPortSlaveAgent
     {
+        ILog log;
 
         /// <summary>
         /// 根据Master对象信息和Salve配置信息生成对象
@@ -23,37 +25,44 @@ namespace MicroDAQ.Gateways.Modbus2
         {
             ///上属Master相关
             this.ModbusMasterAgent = masterAgent;
-             switch (slaveInfo.type.ToUpper())
+            try
             {
-                case "MODBUSRTU":
-                    if (ModbusMasterAgent.MasterInfo.type.ToLower() == "tcp")
-                    {
-                        this.ModbusMasterAgent.ModbusMaster = ModbusSerialMaster.CreateRtu(slaveInfo.tcpClient);
-                    }
-                    else
-                    {
-                        this.ModbusMasterAgent.ModbusMaster= ModbusSerialMaster.CreateRtu(this.ModbusMasterAgent.SerialPort);
-                    }
-                    break;
-                case "MODBUSASCII":
-                    if (ModbusMasterAgent.MasterInfo.type.ToLower() == "tcp")
-                    {
-                        this.ModbusMasterAgent.ModbusMaster = ModbusSerialMaster.CreateAscii(slaveInfo.tcpClient);
-                    }
-                    else
-                    {
-                        this.ModbusMasterAgent.ModbusMaster = ModbusSerialMaster.CreateAscii(this.ModbusMasterAgent.SerialPort);
-                    }
-                    break;
-                case "MODBUSTCP":
-                    //this.ModbusMasterAgent.ModbusMaster
-                    //   = ModbusIpMaster.CreateIp(slaveInfo.tcpClient);
-                    this.TcpModbusMaster = ModbusIpMaster.CreateIp(slaveInfo.tcpClient);
-                    break;
-                    
-                default:
-                    throw new InvalidOperationException(string.Format("无法识别的Modbus从机类型-{0}", slaveInfo.type));
+                switch (slaveInfo.type.ToUpper())
+                {
+                    case "MODBUSRTU":
+                        if (ModbusMasterAgent.MasterInfo.type.ToLower() == "tcp")
+                        {
+                            this.ModbusMasterAgent.ModbusMaster = ModbusSerialMaster.CreateRtu(slaveInfo.tcpClient);
+                        }
+                        else
+                        {
+                            this.ModbusMasterAgent.ModbusMaster = ModbusSerialMaster.CreateRtu(this.ModbusMasterAgent.SerialPort);
+                        }
+                        break;
+                    case "MODBUSASCII":
+                        if (ModbusMasterAgent.MasterInfo.type.ToLower() == "tcp")
+                        {
+                            this.ModbusMasterAgent.ModbusMaster = ModbusSerialMaster.CreateAscii(slaveInfo.tcpClient);
+                        }
+                        else
+                        {
+                            this.ModbusMasterAgent.ModbusMaster = ModbusSerialMaster.CreateAscii(this.ModbusMasterAgent.SerialPort);
+                        }
+                        break;
+                    case "MODBUSTCP":
+                        //this.ModbusMasterAgent.ModbusMaster
+                        //   = ModbusIpMaster.CreateIp(slaveInfo.tcpClient);
+                        this.TcpModbusMaster = ModbusIpMaster.CreateIp(slaveInfo.tcpClient);
+                        break;
 
+                    default:
+                        throw new InvalidOperationException(string.Format("无法识别的Modbus从机类型-{0}", slaveInfo.type));
+
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error(new Exception("运行期间出现一个错误！", ex));
             }
 
             ///自身Slave相关
@@ -72,123 +81,130 @@ namespace MicroDAQ.Gateways.Modbus2
         /// </summary>
         public void Read()
         {
-            for (int i = 0; i < this.Variables.Count; i++)
+            try
             {
-                ModbusVariable variable = Variables[i];
-
-                ushort[] tmpVal = new ushort[variable.VariableInfo.length];
-                if (variable.VariableInfo.accessibility != "WriteOnly")
+                for (int i = 0; i < this.Variables.Count; i++)
                 {
-                    if (ModbusSlaveInfo.type.ToUpper() != "MODBUSTCP")
-                    {
-                        ///取出数据
-                        switch (variable.VariableInfo.regesiterType)
-                        {
-                            //TODO:需要修改以下判断值
-                            case 3:
-                                tmpVal = this.ModbusMasterAgent.ModbusMaster.
-                                                                ReadHoldingRegisters(
-                                                                         this.ModbusSlaveInfo.slave,
-                                                                         variable.VariableInfo.regesiterAddress,
-                                                                         variable.VariableInfo.length);
-                                break;
-                            case 2:
-                                tmpVal = this.ModbusMasterAgent.ModbusMaster.
-                                                                ReadInputRegisters(
-                                                                         this.ModbusSlaveInfo.slave,
-                                                                         variable.VariableInfo.regesiterAddress,
-                                                                         variable.VariableInfo.length);
-                                break;
-                            case 1:
-                                
-                                                                          
-                                break;
-                            case 0:
-                                 bool[] boolValue=new bool[variable.VariableInfo.length];
-                                 boolValue = this.ModbusMasterAgent.ModbusMaster.ReadCoils(
-                                                                         this.ModbusSlaveInfo.slave,
-                                                                         variable.VariableInfo.regesiterAddress,
-                                                                         variable.VariableInfo.length);
-                                 for (int j = 0; j < boolValue.Length;j++ )
-                                 {
-                                     if (boolValue[i])
-                                     {
-                                         tmpVal[i] = 1;
-                                     }
-                                     else
-                                     {
-                                         tmpVal[i] = 0;
-                                     }
-                                 }
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        switch (variable.VariableInfo.regesiterType)
-                        {
-                            //TODO:需要修改以下判断值
-                            case 3:
-                                tmpVal = this.TcpModbusMaster.ReadHoldingRegisters(
-                                                                         this.ModbusSlaveInfo.slave,
-                                                                         variable.VariableInfo.regesiterAddress,
-                                                                         variable.VariableInfo.length);
-                                break;
-                            case 2:
-                                tmpVal = this.TcpModbusMaster.ReadInputRegisters(
-                                                                         this.ModbusSlaveInfo.slave,
-                                                                         variable.VariableInfo.regesiterAddress,
-                                                                         variable.VariableInfo.length);
-                                break;
-                            case 1:
-                                break;
-                            case 0:
-                                break;
-                            default:
-                                break;
-                        }
- 
-                    }
+                    ModbusVariable variable = Variables[i];
 
-
-                    ///转化数据
-                    switch (variable.VariableInfo.dataType.ToLower())
+                    ushort[] tmpVal = new ushort[variable.VariableInfo.length];
+                    if (variable.VariableInfo.accessibility != "WriteOnly")
                     {
-                        case "integer":
-                            switch (variable.VariableInfo.length)
+                        if (ModbusSlaveInfo.type.ToUpper() != "MODBUSTCP")
+                        {
+                            ///取出数据
+                            switch (variable.VariableInfo.regesiterType)
                             {
-                                case  1:
-                                    variable.Value = tmpVal[0];
+                                //TODO:需要修改以下判断值
+                                case 3:
+                                    tmpVal = this.ModbusMasterAgent.ModbusMaster.
+                                                                    ReadHoldingRegisters(
+                                                                             this.ModbusSlaveInfo.slave,
+                                                                             variable.VariableInfo.regesiterAddress,
+                                                                             variable.VariableInfo.length);
                                     break;
-                                case  2:
-                                    variable.Value = ModbusUtility.GetUInt32(tmpVal[0], tmpVal[1]);
+                                case 2:
+                                    tmpVal = this.ModbusMasterAgent.ModbusMaster.
+                                                                    ReadInputRegisters(
+                                                                             this.ModbusSlaveInfo.slave,
+                                                                             variable.VariableInfo.regesiterAddress,
+                                                                             variable.VariableInfo.length);
                                     break;
-                                case  4:
-                                    byte[] byte1 = BitConverter.GetBytes(tmpVal[0]);
-                                    byte[] byte2 = BitConverter.GetBytes(tmpVal[1]);
-                                    byte[] byte3 = BitConverter.GetBytes(tmpVal[2]);
-                                    byte[] byte4 = BitConverter.GetBytes(tmpVal[3]);
-                                    byte[] bytes = new byte[8] { byte1[0], byte1[1], byte2[0], byte2[1], byte3[0], byte3[1], byte4[0], byte4[1]};
-                                    variable.Value = BitConverter.ToInt64(bytes, 0);
+                                case 1:
+
+
+                                    break;
+                                case 0:
+                                    bool[] boolValue = new bool[variable.VariableInfo.length];
+                                    boolValue = this.ModbusMasterAgent.ModbusMaster.ReadCoils(
+                                                                            this.ModbusSlaveInfo.slave,
+                                                                            variable.VariableInfo.regesiterAddress,
+                                                                            variable.VariableInfo.length);
+                                    for (int j = 0; j < boolValue.Length; j++)
+                                    {
+                                        if (boolValue[i])
+                                        {
+                                            tmpVal[i] = 1;
+                                        }
+                                        else
+                                        {
+                                            tmpVal[i] = 0;
+                                        }
+                                    }
                                     break;
                                 default:
-                                throw new NotImplementedException(string.Format("无法识别的数据类型-{0}", variable.VariableInfo.dataType));
+                                    break;
                             }
-                            break;
-                        case "real":
-                           variable.Value = ModbusUtility.GetSingle(tmpVal[0], tmpVal[1]);
-                           break;
-                        case "bool":
-                           variable.Value = tmpVal[0];
-                           break;
-                        default:
-                       throw new NotImplementedException(string.Format("无法识别的数据类型-{0}", variable.VariableInfo.dataType));
+                        }
+                        else
+                        {
+                            switch (variable.VariableInfo.regesiterType)
+                            {
+                                //TODO:需要修改以下判断值
+                                case 3:
+                                    tmpVal = this.TcpModbusMaster.ReadHoldingRegisters(
+                                                                             this.ModbusSlaveInfo.slave,
+                                                                             variable.VariableInfo.regesiterAddress,
+                                                                             variable.VariableInfo.length);
+                                    break;
+                                case 2:
+                                    tmpVal = this.TcpModbusMaster.ReadInputRegisters(
+                                                                             this.ModbusSlaveInfo.slave,
+                                                                             variable.VariableInfo.regesiterAddress,
+                                                                             variable.VariableInfo.length);
+                                    break;
+                                case 1:
+                                    break;
+                                case 0:
+                                    break;
+                                default:
+                                    break;
+                            }
+
+                        }
+
+
+                        ///转化数据
+                        switch (variable.VariableInfo.dataType.ToLower())
+                        {
+                            case "integer":
+                                switch (variable.VariableInfo.length)
+                                {
+                                    case 1:
+                                        variable.Value = tmpVal[0];
+                                        break;
+                                    case 2:
+                                        variable.Value = ModbusUtility.GetUInt32(tmpVal[0], tmpVal[1]);
+                                        break;
+                                    case 4:
+                                        byte[] byte1 = BitConverter.GetBytes(tmpVal[0]);
+                                        byte[] byte2 = BitConverter.GetBytes(tmpVal[1]);
+                                        byte[] byte3 = BitConverter.GetBytes(tmpVal[2]);
+                                        byte[] byte4 = BitConverter.GetBytes(tmpVal[3]);
+                                        byte[] bytes = new byte[8] { byte1[0], byte1[1], byte2[0], byte2[1], byte3[0], byte3[1], byte4[0], byte4[1] };
+                                        variable.Value = BitConverter.ToInt64(bytes, 0);
+                                        break;
+                                    default:
+                                        throw new NotImplementedException(string.Format("无法识别的数据类型-{0}", variable.VariableInfo.dataType));
+                                }
+                                break;
+                            case "real":
+                                variable.Value = ModbusUtility.GetSingle(tmpVal[0], tmpVal[1]);
+                                break;
+                            case "bool":
+                                variable.Value = tmpVal[0];
+                                break;
+                            default:
+                                throw new NotImplementedException(string.Format("无法识别的数据类型-{0}", variable.VariableInfo.dataType));
+                        }
                     }
+
+
                 }
-     
-               
+            }
+            catch (Exception ex)
+            {
+                log.Error(new Exception("运行期间出现一个错误！", ex));
             }
         }
         /// <summary>
@@ -207,48 +223,55 @@ namespace MicroDAQ.Gateways.Modbus2
         //}
         public void Write()
         {
-            foreach (ModbusVariable variable in this.Variables)
+            try
             {
-                if (variable.VariableInfo.accessibility != "ReadOnly")
+                foreach (ModbusVariable variable in this.Variables)
                 {
-                    DataRow dr = SelectControl(variable.VariableInfo.code);
-                    ushort[] shortValues;
-                    if (dr["type"].ToString().ToUpper() == "WLT")
+                    if (variable.VariableInfo.accessibility != "ReadOnly")
                     {
-                        switch (Convert.ToInt32(dr["command"]))
+                        DataRow dr = SelectControl(variable.VariableInfo.code);
+                        ushort[] shortValues;
+                        if (dr["type"].ToString().ToUpper() == "WLT")
                         {
-                            case 1:
-                                shortValues = new ushort[4] { 0, 0, 0, 1 };
-                                break;
-                            case 2:
-                                shortValues = new ushort[4] { 0, 0, 1, 0 };
-                                break;
-                            case 4:
-                                shortValues = new ushort[4] { 0, 1, 0, 0 };
-                                break;
-                            case 8:
-                                shortValues = new ushort[4] { 1, 0, 0, 0 };
-                                break;
-                            case 12:
-                                shortValues = new ushort[4] { 1, 1, 0, 0 };
-                                break;
-                            default:
-                                shortValues = new ushort[4] { 0, 0, 0, 0 };
-                                throw new NotImplementedException(string.Format("无法识别的指令-{0}", Convert.ToInt32(dr["command"])));
+                            switch (Convert.ToInt32(dr["command"]))
+                            {
+                                case 1:
+                                    shortValues = new ushort[4] { 0, 0, 0, 1 };
+                                    break;
+                                case 2:
+                                    shortValues = new ushort[4] { 0, 0, 1, 0 };
+                                    break;
+                                case 4:
+                                    shortValues = new ushort[4] { 0, 1, 0, 0 };
+                                    break;
+                                case 8:
+                                    shortValues = new ushort[4] { 1, 0, 0, 0 };
+                                    break;
+                                case 12:
+                                    shortValues = new ushort[4] { 1, 1, 0, 0 };
+                                    break;
+                                default:
+                                    shortValues = new ushort[4] { 0, 0, 0, 0 };
+                                    throw new NotImplementedException(string.Format("无法识别的指令-{0}", Convert.ToInt32(dr["command"])));
+                            }
+                            variable.originalValue = shortValues;
                         }
-                        variable.originalValue = shortValues;
+                        else
+                        {
+                            variable.originalValue[0] = Convert.ToUInt16(dr["command"]);
+                        }
+                        this.ModbusMasterAgent.ModbusMaster.
+                                   WriteMultipleRegisters(
+                                       this.ModbusSlaveInfo.slave,
+                                       variable.VariableInfo.regesiterAddress,
+                                        (ushort[])variable.OriginalValue);
+
                     }
-                    else
-                    {
-                        variable.originalValue[0] = Convert.ToUInt16(dr["command"]);
-                    }
-                     this.ModbusMasterAgent.ModbusMaster.
-                                WriteMultipleRegisters(
-                                    this.ModbusSlaveInfo.slave,
-                                    variable.VariableInfo.regesiterAddress,
-                                     (ushort[])variable.OriginalValue);
-                   
                 }
+            }
+            catch (Exception ex)
+            {
+                log.Error(new Exception("运行期间出现一个错误！", ex));
             }
         }
         public void ReadWrite()
