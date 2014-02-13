@@ -138,7 +138,19 @@ namespace MicroDAQ.Specifical
                                     row["PLC数据值1"] = meter.Value.ToString();
                                     row["PLC设备类型"] = meter.Type.ToString();
                                     row["PLC状态"] = meter.State.ToString();
-                                    row["PLC可信度"] = meter.Quality.ToString();
+                                   // row["PLC可信度"] = meter.Quality.ToString();
+                                    switch (meter.Quality.ToString())
+                                    {
+                                        case "192":
+                                            row["PLC可信度"] = "良好";
+                                            break;
+                                        case "0":
+                                            row["PLC可信度"] = "掉线";
+                                            break;
+                                        default:
+                                            row["PLC可信度"] = "差";
+                                            break;
+                                    }
                                     NewTable.Rows.Add(row);
                                 }
                             }

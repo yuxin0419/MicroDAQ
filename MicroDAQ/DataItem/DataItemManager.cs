@@ -83,6 +83,7 @@ namespace MicroDAQ.DataItem
                         val =Convert.ToSingle(value[i]);
                         Manager.Items[item[i]].Value = val;
                         Manager.Items[item[i]].ID = idlist[item[i]];
+                        Manager.Items[item[i]].Quality = Qualities[item[i]];
 
                     }
                 }
