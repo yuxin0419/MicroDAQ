@@ -44,14 +44,21 @@ namespace MicroDAQ
                     Application.SetCompatibleTextRenderingDefault(false);
 
                     Form MainForm = null;
-                    while (!BeQuit)
+                    try
                     {
-                        MainForm = new MainForm();
-                        Application.Run(MainForm);
-                        if (MainForm != null) MainForm.Dispose();
+                        while (!BeQuit)
+                        {
+                            MainForm = new MainForm();
+                            Application.Run(MainForm);
+                            if (MainForm != null) MainForm.Dispose();
+                        }
+                        Environment.Exit(Environment.ExitCode);
+                        break;
+
                     }
-                    Environment.Exit(Environment.ExitCode);
-                    break;
+                    catch (Exception ex)
+                    { log.Error(ex); }
+                   
                 }
 
             }
@@ -61,9 +68,16 @@ namespace MicroDAQ
             {
                 if (createNew)
                 {
-
-                    Application.EnableVisualStyles();
-                    Application.SetCompatibleTextRenderingDefault(false);
+                    try
+                    {
+                        Application.EnableVisualStyles();
+                        Application.SetCompatibleTextRenderingDefault(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error(ex);
+       
+                    }
 
                     Form MainForm = null;
                     while (!BeQuit)

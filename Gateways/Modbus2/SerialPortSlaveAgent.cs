@@ -23,6 +23,7 @@ namespace MicroDAQ.Gateways.Modbus2
         /// <param name="slaveInfo">配置信息</param>
         public SerialPortSlaveAgent(ModbusMasterAgent masterAgent, ModbusSlaveInfo slaveInfo)
         {
+            log = LogManager.GetLogger(this.GetType());
             ///上属Master相关
             this.ModbusMasterAgent = masterAgent;
             try
@@ -62,7 +63,7 @@ namespace MicroDAQ.Gateways.Modbus2
             }
             catch (Exception ex)
             {
-                log.Error(new Exception("运行期间出现一个错误！", ex));
+                log.Error(new Exception("运行期间出现一个连接错误！", ex));
             }
 
             ///自身Slave相关
@@ -204,7 +205,7 @@ namespace MicroDAQ.Gateways.Modbus2
             }
             catch (Exception ex)
             {
-                log.Error(new Exception("运行期间出现一个错误！", ex));
+                log.Error(new Exception("运行期间出现一个连接错误！", ex));
             }
         }
         /// <summary>
@@ -271,7 +272,7 @@ namespace MicroDAQ.Gateways.Modbus2
             }
             catch (Exception ex)
             {
-                log.Error(new Exception("运行期间出现一个错误！", ex));
+                log.Error(new Exception("运行期间出现一个连接错误！", ex));
             }
         }
         public void ReadWrite()

@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("K")]
-[assembly: AssemblyProduct("MicroDAQ")]
+[assembly: AssemblyProduct("ModbusMicroDAQ")]
 [assembly: AssemblyCopyright("Copyright © K 2012")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

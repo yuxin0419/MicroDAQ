@@ -75,7 +75,7 @@ namespace MicroDAQ
                         new DataColumn("PLC的编号ID"),
                         new DataColumn("PLC数据值1"),
                         new DataColumn("PLC设备类型"),
-                        new DataColumn("PLC状态"),
+                        new DataColumn("设备状态"),
                         new DataColumn("PLC可信度") });
                 for (int i = 0; i < dt.Rows.Count; i++)
                 {
@@ -99,9 +99,20 @@ namespace MicroDAQ
                                 row["存储点"] = tmp[8].ToString();
 
                                 row["PLC的编号ID"] = meter.ID.ToString();
-                                row["PLC数据值1"] = meter.Value.ToString();
+                                if (meter.Value != null)
+                                {
+                                    row["PLC数据值1"] = meter.Value.ToString();
+                                    row["设备状态"] = "正常";
+                                }
+                                else
+                                {
+                                    row["PLC数据值1"] = 0;
+                                    row["设备状态"] = "掉线";
+        
+                                }
+                               
                                 row["PLC设备类型"] = meter.Type.ToString();
-                                row["PLC状态"] = meter.State.ToString();
+                                //row["设备状态"] = meter.State.ToString();
                                 row["PLC可信度"] = meter.Quality.ToString();
                                 NewTable.Rows.Add(row);
                             }

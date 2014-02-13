@@ -21,6 +21,7 @@ namespace MicroDAQ.Configuration
 
         public IPSettingInfo(long serialID, DataSet config)
         {
+            log = LogManager.GetLogger(this.GetType());
             ///初始化
             this.serialID = serialID;
 
@@ -46,7 +47,8 @@ namespace MicroDAQ.Configuration
             }
             catch (Exception ex)
             {
-                log.Error(new Exception("运行期间出现一个错误！", ex));
+                log.Error(new Exception("运行期间出现一个连接错误！", ex));
+               
             }
            
         }
