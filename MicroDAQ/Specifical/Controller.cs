@@ -19,10 +19,11 @@ namespace MicroDAQ.Specifical
             
         }
         int running;
-        public bool SetCommand(DataRow[] remoteControl)
+        public bool SetCommand(DataRow[] remoteControl, string[] itemCtrl)
         {
             
             object[] values=new object[remoteControl.Length];
+            int err;
            
             for (int i = 0; i < values.Length; i++)
             {
@@ -44,7 +45,7 @@ namespace MicroDAQ.Specifical
                
             }
 
-                return PLC.Write(GROUP_NAME_CTRL, values);
+                return PLC.Write(GROUP_NAME_CTRL, itemCtrl, values, out err);
                
         }
         public bool SetCommand(DataRow remoteControl)

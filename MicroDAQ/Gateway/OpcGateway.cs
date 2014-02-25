@@ -9,12 +9,14 @@ using MicroDAQ.Database;
 using MicroDAQ.DataItem;
 using log4net;
 using MicroDAQ.Specifical;
+using BeIT.MemCached;
 
 namespace MicroDAQ.Gateway
 {
     public class OpcGateway : GatewayBase
     {
         ILog log;
+        MemcachedClient client;
         public override void Dispose()
         {
             UpdateCycle.Quit();
@@ -33,8 +35,11 @@ namespace MicroDAQ.Gateway
 
             UpdateCycle = new CycleTask();
             RemoteCtrlCycle = new CycleTask();
+            MemcachedCycle = new CycleTask();
+
             UpdateCycle.WorkStateChanged += new CycleTask.WorkStateChangeEventHandle(UpdateCycle_WorkStateChanged);
             RemoteCtrlCycle.WorkStateChanged += new CycleTask.WorkStateChangeEventHandle(RemoteCtrlCycle_WorkStateChanged);
+            client = MemcachedClient.GetInstance("MyConfigFileCache");
         }
 
 
@@ -70,6 +75,7 @@ namespace MicroDAQ.Gateway
         public IList<IDatabaseManage> DatabaseManagers { get; set; }
         public CycleTask UpdateCycle { get; private set; }
         public CycleTask RemoteCtrlCycle { get; private set; }
+        public CycleTask MemcachedCycle{ get; private set; }
 
 
         protected virtual void Update()
@@ -132,15 +138,14 @@ namespace MicroDAQ.Gateway
                             {
                                 if (Convert.ToInt32(Rows[i]["id"]) == mt.IDList[j])
                                 {
-                                    itemCtrl[i] = mt.remoteCtrl[j];
+                                    itemCtrl[i] = mt.ItemCtrl[j];
                                     break;
                                    
                                 }
                             }
                         }
-                        mt.ItemCtrl = itemCtrl;
-                        mt.Connect(pid.ToString(), "127.0.0.1");
-                        mt.SetCommand(Rows);
+                      
+                        mt.SetCommand(Rows,itemCtrl);
                         //控制指令用相同的DB块
                         //if (itemCtrl.Length >= 2 && itemCtrl[0] == itemCtrl[1])
                         //{
@@ -181,6 +186,7 @@ namespace MicroDAQ.Gateway
            
             UpdateCycle.Run(this.Update, System.Threading.ThreadPriority.BelowNormal);
             RemoteCtrlCycle.Run(this.remoteCtrl,pid,System.Threading.ThreadPriority.BelowNormal);
+            MemcachedCycle.Run(this.Memcached, System.Threading.ThreadPriority.BelowNormal);
             
         }
 
@@ -256,6 +262,21 @@ namespace MicroDAQ.Gateway
         {
             if (task != null)
                 task.Quit();
+        }
+        #endregion
+
+        #region  Memcached()
+        public void Memcached()
+        {
+                foreach (IDataItemManage mgr in this.ItemManagers)
+                {
+                    foreach (Item item in mgr.Items)
+                    {
+                        client.Set(item.ID.ToString(), item);
+                    }
+                }
+
+
         }
         #endregion
 

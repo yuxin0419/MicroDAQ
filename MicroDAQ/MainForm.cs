@@ -131,6 +131,9 @@ namespace MicroDAQ
             strl.CopyTo(dbStrl, 0);
             Controller MetersCtrl = new Controller("MetersCtrl", dbStrl, idList);
             Program.MeterManager.CTMeters.Add(90 + j++, MetersCtrl);
+            string pid = ini.GetValue(opcServerType, "ProgramID");
+            MetersCtrl.ItemCtrl = dbStrl;
+            MetersCtrl.Connect(pid.ToString(), "127.0.0.1");
 
         }
        
