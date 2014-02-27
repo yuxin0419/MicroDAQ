@@ -106,6 +106,11 @@ namespace OpcOperate
             return value;
         }
 
+        private static short GetRqstDataTypeOMRON(string itemID)//欧姆龙item数据类型判断，仅对于DM类型
+        {
+            short value = 18;
+            return value;
+        }
         public static short GetTypeCode(string itemID, string serverName)//判断是西门子的还是Matrikon
         {
             switch (serverName)
@@ -115,6 +120,9 @@ namespace OpcOperate
 
                 case "OPC.SimaticNet":
                     return GetRqstDataTypeSiemens(itemID);
+
+                case "OMRON.OPC":
+                    return GetRqstDataTypeOMRON(itemID);
 
                 default: throw new Exception("无法支持的OPC服务类型");
             }

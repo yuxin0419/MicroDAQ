@@ -49,6 +49,8 @@ namespace MicroDAQ.Database
                 UpdateConnection = new SqlConnection(bldr.ConnectionString);
                 getRemoteAdapter = new SqlDataAdapter("SELECT * FROM v_remotecontrol WITH(nolock) WHERE cmdstate=1 AND ID IS NOT NULL AND cycle is not null", GetdataConnection);
                 getRemoteControl = new SqlCommand();
+                getRemoteAdapter.Fill(tblResult);
+                result = new DataRow[tblResult.Rows.Count];
 
                 GetdataConnection.StateChange += new StateChangeEventHandler(Connection_StateChange);
                 instanceFlag = true;
@@ -118,7 +120,7 @@ namespace MicroDAQ.Database
                 GetdataConnection.Close();
             }
             return result;
-        }
+         }
         private void RunProcedure(SqlCommand command, string storedProcName, SqlParameter[] parameters)
         {
             command.CommandType = CommandType.StoredProcedure;

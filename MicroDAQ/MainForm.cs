@@ -86,7 +86,7 @@ namespace MicroDAQ
                 int plcCount = int.Parse(ini.GetValue("PLCConfig", "Amount"));
                 DataRow[] dtRead = dt.Select("accessibility<>'write'");        
                 DataRow[] dtwrite = dt.Select("accessibility<>'read'");
-                createCtrlItem(dtwrite);
+               // createCtrlItem(dtwrite);
                 CreateReadItem(dtRead);               
                 
             }
@@ -120,20 +120,23 @@ namespace MicroDAQ
 
             List<string> strl = new List<string>();
             List<int> idList = new List<int>();
-            for (int i = 0; i < drWrite.Length; i++)
+            if (drWrite.Length != 0)
             {
-                idList.Add(Convert.ToInt32(drWrite[i]["code"]));
-                string strDB = drWrite[i]["address"].ToString();
-                strl.Add(strDB);
+                for (int i = 0; i < drWrite.Length; i++)
+                {
+                    idList.Add(Convert.ToInt32(drWrite[i]["code"]));
+                    string strDB = drWrite[i]["address"].ToString();
+                    strl.Add(strDB);
 
+                }
+                string[] dbStrl = new string[strl.Count];
+                strl.CopyTo(dbStrl, 0);
+                Controller MetersCtrl = new Controller("MetersCtrl", dbStrl, idList);
+                Program.MeterManager.CTMeters.Add(90 + j++, MetersCtrl);
+                string pid = ini.GetValue(opcServerType, "ProgramID");
+                MetersCtrl.ItemCtrl = dbStrl;
+                MetersCtrl.Connect(pid.ToString(), "127.0.0.1");
             }
-            string[] dbStrl = new string[strl.Count];
-            strl.CopyTo(dbStrl, 0);
-            Controller MetersCtrl = new Controller("MetersCtrl", dbStrl, idList);
-            Program.MeterManager.CTMeters.Add(90 + j++, MetersCtrl);
-            string pid = ini.GetValue(opcServerType, "ProgramID");
-            MetersCtrl.ItemCtrl = dbStrl;
-            MetersCtrl.Connect(pid.ToString(), "127.0.0.1");
 
         }
        

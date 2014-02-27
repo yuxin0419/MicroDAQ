@@ -175,7 +175,9 @@
     <EmbeddedResource Include="UI\TestAlarm.resx">
       <DependentUpon>TestAlarm.cs</DependentUpon>
     </EmbeddedResource>
-    <None Include="app.config" />
+    <None Include="app.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="MicroDAQ.ini">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

@@ -39,7 +39,7 @@ namespace MicroDAQ.Gateway
 
             UpdateCycle.WorkStateChanged += new CycleTask.WorkStateChangeEventHandle(UpdateCycle_WorkStateChanged);
             RemoteCtrlCycle.WorkStateChanged += new CycleTask.WorkStateChangeEventHandle(RemoteCtrlCycle_WorkStateChanged);
-            client = MemcachedClient.GetInstance("MyConfigFileCache");
+           // client = MemcachedClient.GetInstance("MyConfigFileCache");
         }
 
 
@@ -186,7 +186,7 @@ namespace MicroDAQ.Gateway
            
             UpdateCycle.Run(this.Update, System.Threading.ThreadPriority.BelowNormal);
             RemoteCtrlCycle.Run(this.remoteCtrl,pid,System.Threading.ThreadPriority.BelowNormal);
-            MemcachedCycle.Run(this.Memcached, System.Threading.ThreadPriority.BelowNormal);
+           // MemcachedCycle.Run(this.Memcached, System.Threading.ThreadPriority.BelowNormal);
             
         }
 
