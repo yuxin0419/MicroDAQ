@@ -75,6 +75,11 @@ namespace MicroDAQ.Gateways.Modbus2
             {
                 this.Variables.Add(new ModbusVariable(var));
             }
+            for (int i = 0; i < this.Variables.Count; i++)
+            {
+                Variables[i].State=(ItemState)2;
+            }
+
         }
 
         /// <summary>
@@ -198,6 +203,7 @@ namespace MicroDAQ.Gateways.Modbus2
                             default:
                                 throw new NotImplementedException(string.Format("无法识别的数据类型-{0}", variable.VariableInfo.dataType));
                         }
+                        variable.State = (ItemState)1;
                     }
 
 
