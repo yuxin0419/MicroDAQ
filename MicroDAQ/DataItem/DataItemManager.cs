@@ -84,6 +84,10 @@ namespace MicroDAQ.DataItem
                         Manager.Items[item[i]].Value = val;
                         Manager.Items[item[i]].ID = idlist[item[i]];
                         Manager.Items[item[i]].Quality = Qualities[i];
+                        if (Qualities[i] == 192)
+                        { Manager.Items[item[i]].State = (DataState)1; }
+                        else
+                        { Manager.Items[item[i]].State = (DataState)2; }
 
                     }
                 }
