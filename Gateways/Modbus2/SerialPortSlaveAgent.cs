@@ -162,6 +162,22 @@ namespace MicroDAQ.Gateways.Modbus2
                                 case 1:
                                     break;
                                 case 0:
+                                    bool[] boolValue = new bool[variable.VariableInfo.length];
+                                    boolValue = this.TcpModbusMaster.ReadCoils(
+                                                                            this.ModbusSlaveInfo.slave,
+                                                                            variable.VariableInfo.regesiterAddress,
+                                                                            variable.VariableInfo.length);
+                                    for (int j = 0; j < boolValue.Length; j++)
+                                    {
+                                        if (boolValue[i])
+                                        {
+                                            tmpVal[i] = 1;
+                                        }
+                                        else
+                                        {
+                                            tmpVal[i] = 0;
+                                        }
+                                    }
                                     break;
                                 default:
                                     break;
@@ -195,9 +211,11 @@ namespace MicroDAQ.Gateways.Modbus2
                                 }
                                 break;
                             case "real":
-                                variable.Value = ModbusUtility.GetSingle(tmpVal[0], tmpVal[1]);
+                               
+                                    variable.Value = ModbusUtility.GetSingle(tmpVal[0], tmpVal[1]);
+                                
                                 break;
-                            case "bool":
+                            case "Discrete":
                                 variable.Value = tmpVal[0];
                                 break;
                             default:

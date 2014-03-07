@@ -18,6 +18,7 @@ namespace MicroDAQ.Gateways.Modbus2
         {
             this.GatewayInfo = config;
             this.DatabaseManagers = DatabaseManagers;
+          
             UpdateCycle = new CycleTask();
             UpdateCycle.WorkStateChanged += new CycleTask.WorkStateChangeEventHandle(UpdateCycle_WorkStateChanged);
             ModbusCycle = new CycleTask();
@@ -62,8 +63,12 @@ namespace MicroDAQ.Gateways.Modbus2
              
              //数据提交
              UpdateCycle.Run(this.Push, System.Threading.ThreadPriority.BelowNormal);
+             
+             //扫描创建tcpclient
+            
 
          }
+        
          #region 读写
          private void ReadWrite()
          {

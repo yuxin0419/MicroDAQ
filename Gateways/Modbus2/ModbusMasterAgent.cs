@@ -5,6 +5,7 @@ using System.IO.Ports;
 using Modbus.Device;
 using MicroDAQ.Configuration;
 using MicroDAQ.Common;
+using JonLibrary.Automatic;
 
 namespace MicroDAQ.Gateways.Modbus2
 {
@@ -68,5 +69,8 @@ namespace MicroDAQ.Gateways.Modbus2
                 slave.ReadWrite();
             }
         }
+       
+       
+       
     }
 }
