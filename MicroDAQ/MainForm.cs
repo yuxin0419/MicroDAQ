@@ -218,7 +218,9 @@ namespace MicroDAQ
 
         private void btnPC_Click(object sender, EventArgs e)
         {
-            Program.opcGateway.Pause();
+            Program.MobusGateway.Pause();
+            this.btnStart.Enabled = true; 
+           
         }
 
         private void Form2_FormClosing(object sender, FormClosingEventArgs e)
