@@ -211,8 +211,28 @@ namespace MicroDAQ.Gateways.Modbus2
                                 }
                                 break;
                             case "real":
-                               
+
+                                if (tmpVal.Length == 1)
+                                {
+                                    double y;
+
+                                    if (tmpVal[0] < 32768)
+                                    {
+                                        y = ((tmpVal[0] * 5) * 1000.0 / 4080000.0) / 240.0;
+                                    }
+                                    else
+                                    {
+                                        y = ((65535 - tmpVal[0] + 1) * 5) * 1000.0 / 4080000.0 / 240.0;
+                                    }
+                                    variable.Value = Convert.ToSingle((y - 4) * (2 / 16));
+
+
+
+                                }
+                                else
+                                {
                                     variable.Value = ModbusUtility.GetSingle(tmpVal[0], tmpVal[1]);
+                                }
                                 
                                 break;
                             case "Discrete":
@@ -323,7 +343,7 @@ namespace MicroDAQ.Gateways.Modbus2
             DataSet ds = new System.Data.DataSet();
             da.Fill(ds);
             return ds.Tables[0].Rows[0];
- 
+         
         }
 
         public MicroDAQ.Configuration.ModbusSlaveInfo ModbusSlaveInfo { get; set; }
