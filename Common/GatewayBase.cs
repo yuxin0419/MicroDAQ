@@ -44,13 +44,6 @@ namespace MicroDAQ.Common
 
         }
 
-        /// <param name="ItemManage">Item管理器对象</param>
-        /// <param name="DatabaseManager">Database管理器对象</param>
-        //public GatewayBase(IList<MicroDAQ.Common.IDataItemManage> ItemManager, IDatabaseManage DatabaseManager)
-        //{
-        //    this.ItemManagers = ItemManagers;
-        //    this.DatabaseManage = DatabaseManager;
-        //}
 
         /// <summary>
         /// 启动
@@ -61,7 +54,7 @@ namespace MicroDAQ.Common
             foreach (IDataItemManage mg in this.ItemManagers)
                 mg.StartSynchronize();
             pushTask = new JonLibrary.Automatic.CycleTask();
-            pushTask.Run(new System.Threading.ThreadStart(Push), System.Threading.ThreadPriority.BelowNormal);
+           // pushTask.Run(new System.Threading.ThreadStart(Push), System.Threading.ThreadPriority.BelowNormal);
             this.GatewayState = Common.GatewayState.Started;
         }
         CycleTask pushTask;
@@ -115,19 +108,19 @@ namespace MicroDAQ.Common
         /// <summary>
         /// 向指定目标推送数据
         /// </summary>
-        public virtual void Push()
-        {
-            foreach (IDatabase db in DatabaseManagers)
-                foreach (IDataItemManage itemManage in this.ItemManagers)
-                    foreach (IItem item in itemManage.Items)
-                    {
-                        if (item.Accessibility != "WriteOnly")
-                        {
-                            db.UpdateItem(item);
-                        }
-                    }
+        //public virtual void Push()
+        //{
+        //    foreach (IDatabase db in DatabaseManagers)
+        //        foreach (IDataItemManage itemManage in this.ItemManagers)
+        //            foreach (IItem item in itemManage.Items)
+        //            {
+        //                if (item.Accessibility != "WriteOnly")
+        //                {
+        //                    db.UpdateItem(item);
+        //                }
+        //            }
 
-        }
+        //}
         /// <summary>
         /// 运行状态将要发生变化的通知事件
         /// </summary>

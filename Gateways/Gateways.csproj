@@ -53,10 +53,7 @@
     <Compile Include="Modbus2\ModbusVariable.cs" />
     <Compile Include="Modbus2\SerialPortSlaveAgent.cs" />
     <Compile Include="Modbus2\ModbusMasterAgent.cs" />
-    <Compile Include="Moubus\IPMasterManager.cs" />
-    <Compile Include="Moubus\ModbusGateway.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Moubus\SerialPortSlaveDevice.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj">

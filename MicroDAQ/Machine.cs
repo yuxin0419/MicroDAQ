@@ -38,7 +38,7 @@ namespace JonLibrary.OPC
             set;
         }
         public string[] ItemStatus;
-        public string[] ItemCtrl;
+        public  string[] ItemCtrl;
         protected const string GROUP_NAME_CTRL = "MachineCtrl";
         protected const string GROUP_NAME_STATE = "MachineState";
 
@@ -64,9 +64,9 @@ namespace JonLibrary.OPC
             success &= PLC.Connect(OpcServerProgramID, OPCServerAddress);
             success &= PLC.AddGroup(GROUP_NAME_CTRL, 1, 0);
             success &= PLC.AddItems(GROUP_NAME_CTRL, ItemCtrl);
-            success &= PLC.AddGroup(GROUP_NAME_STATE, 1, 0);
-            success &= PLC.AddItems(GROUP_NAME_STATE, ItemStatus);
-            PLC.SetState(GROUP_NAME_STATE, true);
+           // success &= PLC.AddGroup(GROUP_NAME_STATE, 1, 0);
+            //success &= PLC.AddItems(GROUP_NAME_STATE, ItemStatus);
+            PLC.SetState(GROUP_NAME_CTRL, true);
             ConnectionState = (success) ? (ConnectionState.Open) : (ConnectionState.Closed);
             return success;
         }

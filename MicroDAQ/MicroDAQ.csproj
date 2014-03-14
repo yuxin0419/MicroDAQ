@@ -47,7 +47,7 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
+    <Optimize>false</Optimize>
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -71,6 +71,8 @@
     <Reference Include="log4net">
       <HintPath>Dynamic\log4net.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="Microsoft.VisualBasic.PowerPacks.Vs, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="OpcRcw.Comn">
       <HintPath>Dynamic\OpcRcw.Comn.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
@@ -84,9 +86,10 @@
       <HintPath>Dynamic\SysncOpcOperate.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.configuration" />
     <Reference Include="System.Data" />
     <Reference Include="System.Data.SQLite">
-      <HintPath>Dynamic\System.Data.SQLite.dll</HintPath>
+      <HintPath>bin\Debug\System.Data.SQLite.dll</HintPath>
     </Reference>
     <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
@@ -94,27 +97,39 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AlarmControl.cs">
+    <Compile Include="ClientLibrary\HashAlgorithms.cs" />
+    <Compile Include="ClientLibrary\LogAdapter.cs" />
+    <Compile Include="ClientLibrary\MemcachedClient.cs" />
+    <Compile Include="ClientLibrary\MemcachedClientException.cs" />
+    <Compile Include="ClientLibrary\PooledSocket.cs" />
+    <Compile Include="ClientLibrary\Serializer.cs" />
+    <Compile Include="ClientLibrary\ServerPool.cs" />
+    <Compile Include="ClientLibrary\SocketPool.cs" />
+    <Compile Include="DBUtility\SQLiteHelper.cs" />
+    <Compile Include="Specifical\ConfigLoader.cs" />
+    <Compile Include="Specifical\DataState.cs" />
+    <Compile Include="Specifical\DataType.cs" />
+    <Compile Include="Specifical\RunningState.cs" />
+    <Compile Include="UI\AlarmControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="AlarmControl.Designer.cs">
+    <Compile Include="UI\AlarmControl.Designer.cs">
       <DependentUpon>AlarmControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="AlertCode.cs" />
-    <Compile Include="Specifical\ConfigLoader.cs" />
-    <Compile Include="Controller.cs" />
-    <Compile Include="Database\DatabaseManage.cs" />
-    <Compile Include="DataItem\PackageDataItemManager.cs" />
-    <Compile Include="DBUtility\SQLiteHelper.cs" />
-    <Compile Include="FlowAlertManager.cs" />
-    <Compile Include="DataItem\OpcDataItemManager.cs" />
-    <Compile Include="DataDisplayForm.cs">
+    <Compile Include="Specifical\AlertCode.cs" />
+    <Compile Include="Specifical\Controller.cs" />
+    <Compile Include="DataItem\IDataItemManage.cs" />
+    <Compile Include="Specifical\FlowAlertManager.cs" />
+    <Compile Include="DataItem\DataItemManager.cs" />
+    <Compile Include="UI\DataDisplayForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="DataDisplayForm.Designer.cs">
+    <Compile Include="UI\DataDisplayForm.Designer.cs">
       <DependentUpon>DataDisplayForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Gateway\PackageGateway.cs" />
+    <Compile Include="Gateway\GatewayBase.cs" />
+    <Compile Include="Gateway\IGateway.cs" />
+    <Compile Include="Gateway\RunningState.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -123,23 +138,23 @@
     </Compile>
     <Compile Include="Machine.cs" />
     <Compile Include="MachineManager.cs" />
-    <Compile Include="Meter.cs" />
+    <Compile Include="Specifical\Meter.cs" />
     <Compile Include="Gateway\OpcGateway.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TestAlarm.cs">
+    <Compile Include="UI\TestAlarm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="TestAlarm.Designer.cs">
+    <Compile Include="UI\TestAlarm.Designer.cs">
       <DependentUpon>TestAlarm.cs</DependentUpon>
     </Compile>
-    <Compile Include="PLCStation.cs" />
+    <Compile Include="Specifical\PLCStation.cs" />
     <Compile Include="UI\ItemAddress.cs" />
-    <EmbeddedResource Include="AlarmControl.resx">
+    <EmbeddedResource Include="UI\AlarmControl.resx">
       <DependentUpon>AlarmControl.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="DataDisplayForm.resx">
+    <EmbeddedResource Include="UI\DataDisplayForm.resx">
       <DependentUpon>DataDisplayForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resx">
@@ -155,11 +170,12 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <EmbeddedResource Include="TestAlarm.resx">
+    <EmbeddedResource Include="UI\TestAlarm.resx">
       <DependentUpon>TestAlarm.cs</DependentUpon>
     </EmbeddedResource>
-    <None Include="app.config" />
-    <None Include="ClassDiagram1.cd" />
+    <None Include="app.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="MicroDAQ.ini">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -199,12 +215,11 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Nitrogen Icon 42.ico" />
-    <None Include="Resources\Icon1.ico" />
-    <None Include="Resources\Image1.png" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Configuration\" />
     <Folder Include="Dynamic\" />
+    <Folder Include="Resources\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj">
@@ -218,14 +233,6 @@
     <ProjectReference Include="..\Gateways\Gateways.csproj">
       <Project>{AFFBE9E4-0C18-471C-AC10-8174AF3B90D7}</Project>
       <Name>Gateways</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ModbusLibrary\ModbusLibrary.csproj">
-      <Project>{8C1B7762-323A-44E8-A3B0-E1E3F6DF404D}</Project>
-      <Name>ModbusLibrary</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Modbus\Modbus.csproj">
-      <Project>{FF96B252-2B24-44A1-A09C-6401B5D7ED23}</Project>
-      <Name>Modbus</Name>
     </ProjectReference>
     <ProjectReference Include="..\OpcOperate\OpcOperate.csproj">
       <Project>{D4092C70-56FE-45CA-AA8C-951BF10C3555}</Project>

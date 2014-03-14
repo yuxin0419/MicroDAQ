@@ -35,14 +35,13 @@
             this.tmr = new System.Windows.Forms.Timer(this.components);
             this.btnPC = new System.Windows.Forms.Button();
             this.stspMain = new System.Windows.Forms.StatusStrip();
-            this.tsslProject = new System.Windows.Forms.ToolStripStatusLabel();
             this.tsslVersion = new System.Windows.Forms.ToolStripStatusLabel();
+            this.tsslProject = new System.Windows.Forms.ToolStripStatusLabel();
             this.tsslMeters = new System.Windows.Forms.ToolStripStatusLabel();
+            this.tsddbPLC = new System.Windows.Forms.ToolStripDropDownButton();
             this.tsslUpdate = new System.Windows.Forms.ToolStripStatusLabel();
             this.tsslRemote = new System.Windows.Forms.ToolStripStatusLabel();
-            this.tsslPLC = new System.Windows.Forms.ToolStripStatusLabel();
-            this.tssddbPLC = new System.Windows.Forms.ToolStripDropDownButton();
-            this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.tsslDB = new System.Windows.Forms.ToolStripStatusLabel();
             this.ni = new System.Windows.Forms.NotifyIcon(this.components);
             this.cmsNI = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.退出EToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -87,81 +86,79 @@
             // stspMain
             // 
             this.stspMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.tsslProject,
             this.tsslVersion,
+            this.tsslProject,
             this.tsslMeters,
+            this.tsddbPLC,
             this.tsslUpdate,
             this.tsslRemote,
-            this.tsslPLC,
-            this.tssddbPLC,
-            this.toolStripStatusLabel1});
+            this.tsslDB});
             this.stspMain.Location = new System.Drawing.Point(0, 253);
             this.stspMain.Name = "stspMain";
             this.stspMain.Size = new System.Drawing.Size(476, 26);
             this.stspMain.TabIndex = 6;
             this.stspMain.Text = "statusStrip1";
             // 
-            // tsslProject
-            // 
-            this.tsslProject.AutoSize = false;
-            this.tsslProject.BorderSides = System.Windows.Forms.ToolStripStatusLabelBorderSides.Right;
-            this.tsslProject.Name = "tsslProject";
-            this.tsslProject.Size = new System.Drawing.Size(105, 21);
-            this.tsslProject.Text = "项目代码：";
-            this.tsslProject.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
             // tsslVersion
             // 
             this.tsslVersion.AutoSize = false;
             this.tsslVersion.BorderSides = System.Windows.Forms.ToolStripStatusLabelBorderSides.Right;
             this.tsslVersion.Name = "tsslVersion";
-            this.tsslVersion.Size = new System.Drawing.Size(90, 21);
-            this.tsslVersion.Text = "接口版本：";
+            this.tsslVersion.Size = new System.Drawing.Size(120, 21);
+            this.tsslVersion.Text = "程序版本：";
             this.tsslVersion.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // tsslProject
+            // 
+            this.tsslProject.AutoSize = false;
+            this.tsslProject.BorderSides = System.Windows.Forms.ToolStripStatusLabelBorderSides.Right;
+            this.tsslProject.Name = "tsslProject";
+            this.tsslProject.Size = new System.Drawing.Size(110, 21);
+            this.tsslProject.Text = "项目代码：";
+            this.tsslProject.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // tsslMeters
             // 
-            this.tsslMeters.BorderSides = System.Windows.Forms.ToolStripStatusLabelBorderSides.Right;
             this.tsslMeters.DoubleClickEnabled = true;
             this.tsslMeters.Name = "tsslMeters";
             this.tsslMeters.Overflow = System.Windows.Forms.ToolStripItemOverflow.Never;
-            this.tsslMeters.Size = new System.Drawing.Size(60, 21);
+            this.tsslMeters.Size = new System.Drawing.Size(56, 21);
             this.tsslMeters.Text = "采集点：";
             this.tsslMeters.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.tsslMeters.Click += new System.EventHandler(this.tsslMeters_Click);
             // 
+            // tsddbPLC
+            // 
+            this.tsddbPLC.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.tsddbPLC.Image = ((System.Drawing.Image)(resources.GetObject("tsddbPLC.Image")));
+            this.tsddbPLC.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tsddbPLC.Name = "tsddbPLC";
+            this.tsddbPLC.Size = new System.Drawing.Size(29, 24);
+            this.tsddbPLC.Text = "PLC中声明的监测点数量";
+            // 
             // tsslUpdate
             // 
+            this.tsslUpdate.AutoSize = false;
+            this.tsslUpdate.BackColor = System.Drawing.SystemColors.Control;
             this.tsslUpdate.Name = "tsslUpdate";
             this.tsslUpdate.Size = new System.Drawing.Size(15, 21);
             this.tsslUpdate.Text = "S";
             // 
             // tsslRemote
             // 
+            this.tsslRemote.AutoSize = false;
+            this.tsslRemote.BackColor = System.Drawing.SystemColors.Control;
             this.tsslRemote.Name = "tsslRemote";
             this.tsslRemote.Size = new System.Drawing.Size(15, 21);
             this.tsslRemote.Text = "S";
             // 
-            // tsslPLC
+            // tsslDB
             // 
-            this.tsslPLC.Name = "tsslPLC";
-            this.tsslPLC.Size = new System.Drawing.Size(77, 21);
-            this.tsslPLC.Text = "PLC的数量：";
-            // 
-            // tssddbPLC
-            // 
-            this.tssddbPLC.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.tssddbPLC.Image = ((System.Drawing.Image)(resources.GetObject("tssddbPLC.Image")));
-            this.tssddbPLC.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tssddbPLC.Name = "tssddbPLC";
-            this.tssddbPLC.Size = new System.Drawing.Size(29, 24);
-            this.tssddbPLC.Text = "PLC的显示数量";
-            // 
-            // toolStripStatusLabel1
-            // 
-            this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            this.toolStripStatusLabel1.Size = new System.Drawing.Size(131, 17);
-            this.toolStripStatusLabel1.Text = "toolStripStatusLabel1";
+            this.tsslDB.BackColor = System.Drawing.Color.LimeGreen;
+            this.tsslDB.Name = "tsslDB";
+            this.tsslDB.Size = new System.Drawing.Size(43, 21);
+            this.tsslDB.Text = "tssldb";
+            this.tsslDB.Visible = false;
             // 
             // ni
             // 
@@ -175,12 +172,12 @@
             this.cmsNI.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.退出EToolStripMenuItem});
             this.cmsNI.Name = "cmsNI";
-            this.cmsNI.Size = new System.Drawing.Size(113, 26);
+            this.cmsNI.Size = new System.Drawing.Size(117, 26);
             // 
             // 退出EToolStripMenuItem
             // 
             this.退出EToolStripMenuItem.Name = "退出EToolStripMenuItem";
-            this.退出EToolStripMenuItem.Size = new System.Drawing.Size(112, 22);
+            this.退出EToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
             this.退出EToolStripMenuItem.Text = "退出(&X)";
             this.退出EToolStripMenuItem.Click += new System.EventHandler(this.退出EToolStripMenuItem_Click);
             // 
@@ -248,8 +245,7 @@
         private System.Windows.Forms.Splitter splitter1;
         private System.Windows.Forms.ToolStripStatusLabel tsslRemote;
         private System.Windows.Forms.Splitter splitter2;
-        private System.Windows.Forms.ToolStripStatusLabel tsslPLC;
-        private System.Windows.Forms.ToolStripDropDownButton tssddbPLC;
-        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
+        private System.Windows.Forms.ToolStripDropDownButton tsddbPLC;
+        private System.Windows.Forms.ToolStripStatusLabel tsslDB;
     }
 }

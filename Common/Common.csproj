@@ -39,7 +39,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IDatabaseManage.cs" />
+    <Compile Include="DatabaseManage.cs" />
     <Compile Include="GatewayBase.cs" />
     <Compile Include="IDatabase.cs" />
     <Compile Include="IDataItemManage.cs" />

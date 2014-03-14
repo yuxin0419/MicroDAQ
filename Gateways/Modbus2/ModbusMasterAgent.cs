@@ -5,7 +5,6 @@ using System.IO.Ports;
 using Modbus.Device;
 using MicroDAQ.Configuration;
 using MicroDAQ.Common;
-using JonLibrary.Automatic;
 
 namespace MicroDAQ.Gateways.Modbus2
 {
@@ -66,11 +65,9 @@ namespace MicroDAQ.Gateways.Modbus2
         {
             foreach (SerialPortSlaveAgent slave in this.SerialPortSlaves)
             {
+                //slave.ModbusSlaveInfo.tcpClient= slave.ModbusSlaveInfo.iPSetting.CreateTcpClient();
                 slave.ReadWrite();
             }
         }
-       
-       
-       
     }
 }

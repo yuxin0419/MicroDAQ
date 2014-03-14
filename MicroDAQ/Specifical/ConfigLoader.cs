@@ -28,7 +28,7 @@ namespace MicroDAQ.Specifical
                     "SELECT * FROM IPSetting";
 
 
-            DataSet ds = sqlite.ExecuteQuery(sql);
+            DataSet ds = sqlite.ExecuteQueryDataSet(sql);
             ds.Tables[0].TableName = "ModbusGateway";
             ds.Tables[1].TableName = "modbusMaster";
             ds.Tables[2].TableName = "modbusSlave";

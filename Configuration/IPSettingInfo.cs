@@ -34,6 +34,27 @@ namespace MicroDAQ.Configuration
             this.iP = dt[0]["ip"].ToString();
             this.port = Convert.ToInt32(dt[0]["port"]);
             this.enable = dt[0]["enable"].ToString();
+            //try
+            //{
+            //    string[] strIP = iP.Split('.');
+            //    byte[] byteIP = new byte[4];
+            //    for (int i = 0; i < strIP.Length; i++)
+            //    {
+            //        byteIP[i] = Convert.ToByte(strIP[i]);
+            //    }
+            //    IPAddress address = new IPAddress(byteIP);
+            //    this.tcpClient = new TcpClient(address.ToString(), port);
+            //}
+            //catch (Exception ex)
+            //{
+            //    log.Error(new Exception("运行期间出现一个连接错误！", ex));
+               
+            //}
+           
+        }
+
+        public TcpClient CreateTcpClient()
+        {
             try
             {
                 string[] strIP = iP.Split('.');
@@ -44,15 +65,16 @@ namespace MicroDAQ.Configuration
                 }
                 IPAddress address = new IPAddress(byteIP);
                 this.tcpClient = new TcpClient(address.ToString(), port);
+                return tcpClient;
             }
             catch (Exception ex)
             {
                 log.Error(new Exception("运行期间出现一个连接错误！", ex));
-               
+                return null;
+
             }
-           
         }
-      
+
        
 
     }

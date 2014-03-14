@@ -5,16 +5,18 @@ using JonLibrary.OPC;
 using JonLibrary.Automatic;
 using System.Threading;
 using System.Data;
-using MicroDAQ.Database;
 using MicroDAQ.DataItem;
-using MicroDAQ.Common;
 using log4net;
+using MicroDAQ.Specifical;
+using BeIT.MemCached;
+using MicroDAQ.Common;
 
 namespace MicroDAQ.Gateway
 {
     public class OpcGateway : GatewayBase
     {
         ILog log;
+        MemcachedClient client;
         public override void Dispose()
         {
             UpdateCycle.Quit();
@@ -25,7 +27,7 @@ namespace MicroDAQ.Gateway
         /// 使用多个ItemManage创建OpcGateway实例
         /// </summary>
         /// <param name="itemManagers"></param>
-        public OpcGateway(IList<IDataItemManage> itemManagers, IList<IDatabase> databaseManagers)
+        public OpcGateway(IList<MicroDAQ.DataItem.IDataItemManage> itemManagers, IList<IDatabase>  databaseManagers)
         {
             log = LogManager.GetLogger(this.GetType());
             this.ItemManagers = itemManagers;
@@ -33,91 +35,107 @@ namespace MicroDAQ.Gateway
 
             UpdateCycle = new CycleTask();
             RemoteCtrlCycle = new CycleTask();
+            MemcachedCycle = new CycleTask();
+
             UpdateCycle.WorkStateChanged += new CycleTask.WorkStateChangeEventHandle(UpdateCycle_WorkStateChanged);
             RemoteCtrlCycle.WorkStateChanged += new CycleTask.WorkStateChangeEventHandle(RemoteCtrlCycle_WorkStateChanged);
+           // client = MemcachedClient.GetInstance("MyConfigFileCache");
         }
 
 
         void UpdateCycle_WorkStateChanged(JonLibrary.Automatic.RunningState state)
         {
-            this.GatewayState = (GatewayState)((int)state);
+            if ((UpdateCycle.State == JonLibrary.Automatic.RunningState.Running) || (RemoteCtrlCycle.State == JonLibrary.Automatic.RunningState.Running))
+            {
+                this.RunningState = Gateway.RunningState.Running;
+            }
+            else
+            {
+                this.RunningState = Gateway.RunningState.Stopped;
+            }
         }
         void RemoteCtrlCycle_WorkStateChanged(JonLibrary.Automatic.RunningState state)
         {
-            this.GatewayState = (GatewayState)((int)state);
+            if ((UpdateCycle.State == JonLibrary.Automatic.RunningState.Running) || (RemoteCtrlCycle.State == JonLibrary.Automatic.RunningState.Running))
+            {
+                this.RunningState = Gateway.RunningState.Running;
+            }
+            else
+            {
+                this.RunningState = Gateway.RunningState.Stopped;
+            }
         }
         /// <summary>
         /// 数据项管理器
         /// </summary>
-        public IList<IDataItemManage> ItemManagers { get; private set; }
+        public IList<MicroDAQ.DataItem.IDataItemManage> ItemManagers { get; private set; }
         /// <summary>
         /// 数据库管理器
         /// </summary>
         public IList<IDatabase> DatabaseManagers { get; set; }
         public CycleTask UpdateCycle { get; private set; }
         public CycleTask RemoteCtrlCycle { get; private set; }
+        public CycleTask MemcachedCycle{ get; private set; }
 
 
-        protected virtual void Update()
-        {
-            try
-            {
-                foreach (IDatabase dbMgr in this.DatabaseManagers)
-                {
-                    foreach (IDataItemManage mgr in this.ItemManagers)
-                    {
-                        foreach (Item item in mgr.Items)
-                        {
-                            dbMgr.UpdateItem(item);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                log.Error(new Exception("运行期间出现一个错误！", ex));
-            }
-        }
+      
 
 
-        private void update2()
-        {
-            foreach (var item in Program.M.Items)
-            {
-                Program.DatabaseManager.UpdateMeterValue(item.ID, (int)item.Type, (int)item.State, (float)item.Value, 0.0f, 0.0f, item.Quality);
-            }
-            foreach (var item in Program.M_flowAlert.Items)
-            {
-                float t = 0.0f;
-                if (((int)item.Value == 0) && ((item.State == ItemState.正常) || (item.State == ItemState.已启动)))
-                    t = 28.3f;
-                if ((int)item.Value == 2)
-                    t = 0.0f;
-                Program.DatabaseManager.UpdateMeterValue(item.ID + 10000, (int)16, (int)item.State, t, 0.0f, 0.0f, item.Quality);
-                Console.WriteLine(item.ToString());
-            }
-
-        }
+       
         int running;
-        public void remoteCtrl()
+        public void remoteCtrl(object pid)
         {
             try
             {
                 DataRow[] Rows = this.DatabaseManagers[0].GetRemoteControl();
-                if (Rows != null)
-                    foreach (var row in Rows)
+                if (Rows != null && Rows.Length != 0)
+                {
+                    //添加有控制指令的DB块（筛选,排序）
+                    foreach (Controller mt in Program.MeterManager.CTMeters.Values)
                     {
-                        //MessageBox.Show((row["cycle"].ToString() != null).ToString());
-                        foreach (var mt in Program.MeterManager.CTMeters.Values)
-                            mt.SetCommand(++running % ushort.MaxValue,
-                                          int.Parse(row["id"].ToString()),
-                                          int.Parse(row["command"].ToString()),
-                                          int.Parse((row["cycle"] != null) ? (row["cycle"].ToString()) : ("0"))
-                                          );
-                        Thread.Sleep(500);
+                        string[] itemCtrl = new string[Rows.Length];
+
+                        for (int i = 0; i < Rows.Length; i++)
+                        {
+
+                            for (int j = 0; j < mt.IDList.Count; j++)
+                            {
+                                if (Convert.ToInt32(Rows[i]["id"]) == mt.IDList[j])
+                                {
+                                    itemCtrl[i] = mt.ItemCtrl[j];
+                                    break;
+
+                                }
+                            }
+                        }
+
+                        mt.SetCommand(Rows, itemCtrl);
+                        //控制指令用相同的DB块
+                        //if (itemCtrl.Length >= 2 && itemCtrl[0] == itemCtrl[1])
+                        //{
+                        //    string[] sameItem = new string[] { itemCtrl[0] };
+                        //    mt.ItemCtrl = sameItem;
+                        //    mt.Connect(pid.ToString(), "127.0.0.1");
+                        //    foreach (var row in Rows)
+                        //    {
+                        //        mt.SetCommand(row);
+                        //    }
+                        //}
+                        //控制指令用不同的DB块
+                        //else 
+                        //{
+                        //    mt.ItemCtrl = itemCtrl;
+                        //    mt.Connect(pid.ToString(), "127.0.0.1");
+                        //    mt.SetCommand(Rows);
+                        //}
                     }
+
+
+                }
+
                 System.Threading.Thread.Sleep(500);
             }
+
             catch (Exception ex)
             {
                 //MessageBox.Show(ex.ToString());
@@ -126,15 +144,24 @@ namespace MicroDAQ.Gateway
         }
 
         #region Start()
+
+        public override void Start(object pid)
+        {
+           
+           // UpdateCycle.Run(this.Update, System.Threading.ThreadPriority.BelowNormal);
+           // RemoteCtrlCycle.Run(this.remoteCtrl,pid,System.Threading.ThreadPriority.BelowNormal);
+           // MemcachedCycle.Run(this.Memcached, System.Threading.ThreadPriority.BelowNormal);
+            
+        }
+
         /// <summary>
         /// 启动
         /// </summary>
-        public override void Start()
+        public void StartButton(string pid)
         {
-            //foreach (var manager in this.ItemManagers)
-            //    manager.Connect("Matrikon.OPC.Universal", "127.0.0.1");
-            UpdateCycle.Run(this.Update, System.Threading.ThreadPriority.BelowNormal);
-            RemoteCtrlCycle.Run(this.remoteCtrl, System.Threading.ThreadPriority.BelowNormal);
+            foreach (var manager in this.ItemManagers)
+                manager.Connect(pid, "127.0.0.1");
+            Start(pid);
         }
         #endregion
 
@@ -199,6 +226,21 @@ namespace MicroDAQ.Gateway
         {
             if (task != null)
                 task.Quit();
+        }
+        #endregion
+
+        #region  Memcached()
+        public void Memcached()
+        {
+                foreach (MicroDAQ.Common.IDataItemManage mgr in this.ItemManagers)
+                {
+                    foreach (Item item in mgr.Items)
+                    {
+                        client.Set(item.ID.ToString(), item);
+                    }
+                }
+
+
         }
         #endregion
 

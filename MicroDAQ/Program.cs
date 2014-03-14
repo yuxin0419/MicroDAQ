@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Windows.Forms;
 using JonLibrary.Automatic;
-using MicroDAQ.Database;
 using MicroDAQ.Gateway;
 using log4net;
 using MicroDAQ.DataItem;
 using System.Data.SqlClient;
+using MicroDAQ.Specifical;
 using MicroDAQ.Gateways.Modbus2;
 namespace MicroDAQ
 {
@@ -44,21 +44,14 @@ namespace MicroDAQ
                     Application.SetCompatibleTextRenderingDefault(false);
 
                     Form MainForm = null;
-                    try
+                    while (!BeQuit)
                     {
-                        while (!BeQuit)
-                        {
-                            MainForm = new MainForm();
-                            Application.Run(MainForm);
-                            if (MainForm != null) MainForm.Dispose();
-                        }
-                        Environment.Exit(Environment.ExitCode);
-                        break;
-
+                        MainForm = new MainForm();
+                        Application.Run(MainForm);
+                        if (MainForm != null) MainForm.Dispose();
                     }
-                    catch (Exception ex)
-                    { log.Error(ex); }
-                   
+                    Environment.Exit(Environment.ExitCode);
+                    break;
                 }
 
             }
@@ -68,16 +61,9 @@ namespace MicroDAQ
             {
                 if (createNew)
                 {
-                    try
-                    {
-                        Application.EnableVisualStyles();
-                        Application.SetCompatibleTextRenderingDefault(false);
-                    }
-                    catch (Exception ex)
-                    {
-                        log.Error(ex);
-       
-                    }
+
+                    Application.EnableVisualStyles();
+                    Application.SetCompatibleTextRenderingDefault(false);
 
                     Form MainForm = null;
                     while (!BeQuit)
@@ -87,7 +73,7 @@ namespace MicroDAQ
                             MainForm = new MainForm();
                             Application.Run(MainForm);
                         }
-                       catch (Exception ex)
+                        catch (Exception ex)
                         {
                             log.Error(ex);
                         }
@@ -107,8 +93,8 @@ namespace MicroDAQ
         public static OpcGateway opcGateway = null;
         public static ModbusGateway MobusGateway = null;
         public static MachineManager MeterManager = new MachineManager();
-        public static DatabaseManage DatabaseManager;//= new DatabaseManager();
-        public static OpcDataItemManager M;
+       // public static DatabaseManage DatabaseManager;//= new DatabaseManager();
+        public static DataItemManager M;
         public static FlowAlertManager M_flowAlert;
 
     }

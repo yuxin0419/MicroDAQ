@@ -6,19 +6,19 @@ using Modbus.Device;
 using System.Data;
 using MicroDAQ.Configuration;
 using JonLibrary.Automatic;
+using System.Threading;
 
 namespace MicroDAQ.Gateways.Modbus2
 {
     public class ModbusGateway : GatewayBase
     {
-
+        public CycleTask TcpClientCycle { get; private set; }
         public CycleTask UpdateCycle { get; private set; }
         public CycleTask ModbusCycle { get; private set; }
-        public ModbusGateway(ModbusGatewayInfo config, IList<IDatabase> DatabaseManagers)
+        public ModbusGateway(ModbusGatewayInfo config)
         {
             this.GatewayInfo = config;
-            this.DatabaseManagers = DatabaseManagers;
-          
+            TcpClientCycle = new CycleTask();
             UpdateCycle = new CycleTask();
             UpdateCycle.WorkStateChanged += new CycleTask.WorkStateChangeEventHandle(UpdateCycle_WorkStateChanged);
             ModbusCycle = new CycleTask();
@@ -60,15 +60,27 @@ namespace MicroDAQ.Gateways.Modbus2
              // 读写
 
              ModbusCycle.Run(this.ReadWrite, System.Threading.ThreadPriority.BelowNormal);
-             
-             //数据提交
-             UpdateCycle.Run(this.Push, System.Threading.ThreadPriority.BelowNormal);
-             
-             //扫描创建tcpclient
-            
+            TcpClientCycle.Run(this.CreateTcpClient,System.Threading.ThreadPriority.BelowNormal);         
 
          }
-        
+         public void CreateTcpClient()
+         {
+             foreach (ModbusMasterAgent modbusMaster in ItemManagers)
+             {
+                 foreach (SerialPortSlaveAgent SerialPortSlaveAgent in modbusMaster.SerialPortSlaves)
+                 {
+                     if (SerialPortSlaveAgent.tcpClientflag == false)
+                     {
+                         SerialPortSlaveAgent.ModbusSlaveInfo.tcpClient = SerialPortSlaveAgent.ModbusSlaveInfo.iPSetting.CreateTcpClient();
+                         SerialPortSlaveAgent.tcpClientflag = true;
+                     }
+
+                  
+                 }
+             }
+             Thread.Sleep(500);
+           
+         }
          #region 读写
          private void ReadWrite()
          {

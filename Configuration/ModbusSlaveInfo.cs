@@ -56,7 +56,7 @@ namespace MicroDAQ.Configuration
             {
                 long ipSettingID = Convert.ToInt64(dt[0]["IPSetting_SerialID"]);
                 this.iPSetting = new IPSettingInfo(ipSettingID, config);
-                this.tcpClient = iPSetting.tcpClient;
+                //this.tcpClient = iPSetting.tcpClient;
             }
         }
 

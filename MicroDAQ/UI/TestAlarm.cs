@@ -1,0 +1,75 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Text;
+using System.Windows.Forms;
+using MicroDAQ.UI;
+
+namespace MicroDAQ.UI
+{
+    public partial class TestAlarm : Form
+    {
+        private int initSlave = 200;
+        private int alarmIndex = 0;
+
+        private List<AlarmControl> alarms;
+        public TestAlarm()
+        {
+            InitializeComponent();
+            alarms = new List<AlarmControl>();
+        }
+
+        private AlarmControl AddAlarm(int slave, byte alertCode)
+        {
+            AlarmControl alarm = new AlarmControl(slave, alertCode);
+            alarms.Add(alarm);
+            this.Controls.Add(alarm);
+            return alarm;
+        }
+        private void RemoveAlarm()
+        {
+            AlarmControl alarm = alarms[alarms.Count - 1];
+            this.Controls.Remove(alarm);
+            alarms.RemoveAt(alarms.Count - 1);
+            alarm.Dispose();
+        }
+
+        private void btnAdd_Click(object sender, EventArgs e)
+        {
+            AlarmControl alarm = AddAlarm(alarmIndex++ + initSlave, 0);
+            alarm.Location = new Point(30, 40 + 29 * alarmIndex);
+
+        }
+
+        private void textBox1_TextChanged(object sender, EventArgs e)
+        {
+            int slave;
+            int.TryParse(this.textBox1.Text, out slave);
+            this.initSlave = slave;
+        }
+
+        private void btnRemove_Click(object sender, EventArgs e)
+        {
+
+            RemoveAlarm();
+            alarmIndex--;
+        }
+
+        private void TestAlarm_Load(object sender, EventArgs e)
+        {
+            Program.opcGateway.Pause(Program.opcGateway.RemoteCtrlCycle);
+
+        }
+        int runningNum = 0;
+
+        int ctrlIndex = 0;
+
+        private void TestAlarm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Program.opcGateway.Continue(Program.opcGateway.RemoteCtrlCycle);
+        }
+
+    }
+}

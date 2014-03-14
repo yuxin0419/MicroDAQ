@@ -204,7 +204,41 @@ namespace MicroDAQ.DBUtility
         /// </summary>
         /// <param name="sql"></param>
         /// <returns></returns>
-        public DataSet ExecuteQuery(string sql)
+        public DataTable ExecuteQuery(string sql)
+        {
+            DataSet ds = new DataSet();
+
+            try
+            {
+                if (con.State == ConnectionState.Closed)
+                {
+                    con.Open();
+                }
+
+                SQLiteDataAdapter da = new SQLiteDataAdapter(sql, con);
+                da.Fill(ds);
+                con.Close();
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                if (con.State != ConnectionState.Closed)
+                {
+                    con.Dispose();
+                }
+            }
+
+            return ds.Tables[0];
+        }
+        /// <summary>
+        /// 查询列表
+        /// </summary>
+        /// <param name="sql"></param>
+        /// <returns></returns>
+        public DataSet ExecuteQueryDataSet(string sql)
         {
             DataSet ds = new DataSet();
 

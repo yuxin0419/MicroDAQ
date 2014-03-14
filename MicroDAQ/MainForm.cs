@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -12,15 +12,14 @@ using System.Threading;
 using MicroDAQ.UI;
 using OpcOperate.Sync;
 using MicroDAQ.DataItem;
-using MicroDAQ.Database;
 using MicroDAQ.Gateway;
 using log4net;
 using System.Data.SqlClient;
-using MicroDAQ.Common;
-
+using MicroDAQ.Specifical;
 using MicroDAQ.DBUtility;
-using MicroDAQ.Gateways.Modbus2;
 using MicroDAQ.Configuration;
+using MicroDAQ.Gateways.Modbus2;
+using MicroDAQ.Common;
 
 namespace MicroDAQ
 {
@@ -30,28 +29,25 @@ namespace MicroDAQ
         /// 使用哪个OPCServer
         /// </summary>
         string opcServerType = "SimaticNet";
-        private string wordItemFormat;
-        private string wordArrayItemFormat;
-        private string realItemFormat;
 
-        private List<PLCStationInformation> Plcs;
+        public CycleTask UpdateCycle;
+       // private List<PLCStationInformation> Plcs;
+        PLCStationInformation plc;
         private OpcOperate.Sync.OPCServer SyncOpc;
         IniFile ini = null;
 
         ILog log;
-        List<ModbusMasterInfo> masterList;
-        List<ModbusSlaveInfo> slaveList;
-        List<ModbusVariableInfo> Variablelist;
-        List<ModbusMasterAgent> agentlist;
         public MainForm()
         {
+            UpdateCycle = new CycleTask();
             log = LogManager.GetLogger(this.GetType());
             InitializeComponent();
-            Plcs = new List<PLCStationInformation>();
+           // Plcs = new List<PLCStationInformation>();
         }
 
         private void Form2_Load(object sender, EventArgs e)
         {
+            Console.WriteLine(System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString());
             ni.Icon = this.Icon;
             ni.Text = this.Text;
 
@@ -61,17 +57,10 @@ namespace MicroDAQ
                 ini = new IniFile(AppDomain.CurrentDomain.BaseDirectory + "MicroDAQ.ini");
                 this.Text = ini.GetValue("General", "Title");
                 this.tsslProject.Text = "项目代码：" + ini.GetValue("General", "ProjetCode");
-                this.tsslVersion.Text = "接口版本：" + ini.GetValue("General", "VersionCode");
+                this.tsslVersion.Text = "程序版本：" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
                 autoStart = bool.Parse(ini.GetValue("AutoRun", "AutoStart"));
                 int plcCount = int.Parse(ini.GetValue("PLCConfig", "Amount"));
                 opcServerType = ini.GetValue("OpcServer", "Type").Trim();
-                for (int i = 0; i < plcCount; i++)
-                {
-                    PLCStationInformation plc = new PLCStationInformation();
-                    Plcs.Add(plc);
-                    plc.Connection = string.Format(ini.GetValue(opcServerType, "ConnectionString"), i + 1);
-
-                }
 
 
             }
@@ -86,29 +75,89 @@ namespace MicroDAQ
             }
             ni.Text = this.Text;
         }
+        private bool Config()
+        {
+            bool success = false;
+            try
+            {
+                string dbFile = "sqlite.db";
+                SQLiteHelper sqlite = new SQLiteHelper(dbFile);
+                string strSql = "select * from opcGateway ";
+                int id =Convert.ToInt32(sqlite.ExecuteScalar(strSql));
+                string strDBSql = "select * from DBconfig where OPCGateway_serialID="+id;
+                DataTable dt = sqlite.ExecuteQuery(strDBSql);
+                int plcCount = int.Parse(ini.GetValue("PLCConfig", "Amount"));
+                DataRow[] dtRead = dt.Select("accessibility<>'write'");        
+                DataRow[] dtwrite = dt.Select("accessibility<>'read'");
+               // createCtrlItem(dtwrite);
+                CreateReadItem(dtRead);               
+                
+            }
+            catch (Exception ex)
+            {
+                log.Error(ex);
+                success = false;
+            }
+           return  success= true;
+        }
 
+        private void CreateReadItem(DataRow[] dtRead)
+        {
+            plc = new PLCStationInformation();
+            List<int> list = new List<int>();
+            for (int i = 0; i < dtRead.Length; i++)
+            {
+                plc.ItemsID.Add(Convert.ToInt32(dtRead[i]["code"]));
+                string strDB = dtRead[i]["address"].ToString();
+                plc.ItemsData.Add(strDB);
 
+            }
+        }
 
+        /// <summary>
+        /// 控制指令
+        /// </summary>
+        private void createCtrlItem(DataRow[] drWrite)
+        {
+            int j = 0;
 
+            List<string> strl = new List<string>();
+            List<int> idList = new List<int>();
+            if (drWrite.Length != 0)
+            {
+                for (int i = 0; i < drWrite.Length; i++)
+                {
+                    idList.Add(Convert.ToInt32(drWrite[i]["code"]));
+                    string strDB = drWrite[i]["address"].ToString();
+                    strl.Add(strDB);
 
+                }
+                string[] dbStrl = new string[strl.Count];
+                strl.CopyTo(dbStrl, 0);
+                Controller MetersCtrl = new Controller("MetersCtrl", dbStrl, idList);
+                Program.MeterManager.CTMeters.Add(90 + j++, MetersCtrl);
+                string pid = ini.GetValue(opcServerType, "ProgramID");
+                MetersCtrl.ItemCtrl = dbStrl;
+                MetersCtrl.Connect(pid.ToString(), "127.0.0.1");
+            }
+
+        }
+       
         /// <summary>
         /// 创建数据项管理器
         /// </summary>
-        private IList<IDataItemManage> createItemsMangers()
+        private IList<MicroDAQ.DataItem.IDataItemManage> createItemsMangers()
         {
             bool success = false;
-            IList<IDataItemManage> listDataItemManger = new List<IDataItemManage>();
+            IList<MicroDAQ.DataItem.IDataItemManage> listDataItemManger = new List<MicroDAQ.DataItem.IDataItemManage>();
             try
-            {
-                foreach (var plc in Plcs)
-                {
-                    string[] head = new string[plc.ItemsHead.Count];
+            {                          
                     string[] data = new string[plc.ItemsData.Count];
-                    plc.ItemsHead.CopyTo(head, 0);
                     plc.ItemsData.CopyTo(data, 0);
-                    IDataItemManage dim = new OpcDataItemManager("ItemData", head, data);
+                    IList<int> IDlist=plc.ItemsID;
+                    DataItemManager dim = new DataItemManager("ItemData", data, IDlist);
                     listDataItemManger.Add(dim);
-                }
+               
 
                 success = true;
             }
@@ -123,10 +172,12 @@ namespace MicroDAQ
         }
 
 
-        private IList<IDatabase> createDBManagers()
+
+        IList<MicroDAQ.Common.IDatabase> listDatabaseManger;
+        private IList<MicroDAQ.Common.IDatabase> createDBManagers()
         {
             bool success = false;
-            IList<IDatabase> listDatabaseManger = new List<IDatabase>();
+            listDatabaseManger = new List<MicroDAQ.Common.IDatabase>();
             string[] dbs = ini.GetValue("Database", "Members").Trim().Split(',');
             try
             {
@@ -158,15 +209,81 @@ namespace MicroDAQ
             ModbusGatewayInfo[] gatewayInfo = MicroDAQ.Specifical.ConfigLoader.LoadConfig();
 
 
-            ModbusGateway gateway = new ModbusGateway(gatewayInfo[0],createDBManagers());
+            ModbusGateway gateway = new ModbusGateway(gatewayInfo[0]);
 
             Program.MobusGateway = gateway;
             Program.MobusGateway.Start();
+            Thread.Sleep(Program.waitMillionSecond);
+            SyncOpc = new OPCServer();
+            string pid = ini.GetValue(opcServerType, "ProgramID");
+            Config();
+            Program.opcGateway = new OpcGateway(createItemsMangers(),createDBManagers());
+            Program.opcGateway.StateChanged += new EventHandler(opcGateway_StateChanged);
+            Program.opcGateway.UpdateCycle.WorkStateChanged += new CycleTask.WorkStateChangeEventHandle(UpdateCycle_WorkStateChanged);
+            Program.opcGateway.RemoteCtrlCycle.WorkStateChanged += new CycleTask.WorkStateChangeEventHandle(RemoteCtrlCycle_WorkStateChanged);
+            Program.opcGateway.StartButton(pid);
+            UpdateCycle.Run(this.Push, System.Threading.ThreadPriority.BelowNormal);
+        }
+        /// <summary>
+        /// 数据库提交
+        /// </summary>
+        public virtual void Push()
+        {
+            foreach (MicroDAQ.Common.IDatabase db in listDatabaseManger)
+            {
+                foreach (MicroDAQ.Common.IDataItemManage itemManage in Program.MobusGateway.ItemManagers)
+                {
+                    foreach (IItem ModbusItem in itemManage.Items)
+                    {
+                        if (ModbusItem.Accessibility != "WriteOnly")
+                        {
+                            db.UpdateItem(ModbusItem);
+                        }
+                    }
+                }
+
+               
+                    foreach (MicroDAQ.DataItem.IDataItemManage mgr in Program.opcGateway.ItemManagers)
+                    {
+                        foreach (MicroDAQ.Common.Item OpcItem in mgr.Items)
+                        {
+                            db.UpdateItem(OpcItem);
+                        }
+                    }
+                
+
+            }
+
+
 
         }
 
+        void opcGateway_StateChanged(object sender, EventArgs e)
+        {
+            Console.WriteLine((sender as OpcGateway).RunningState);
+            if (this.InvokeRequired)
+            {
+                this.BeginInvoke(new MethodInvoker(delegate
+                {
+                    if (Program.opcGateway.RunningState == Gateway.RunningState.Running)
+                    {
+                        //添加获取采集点的数量
+                        this.tsddbPLC.DropDownItems.Clear();
+                       
+                            ToolStripMenuItem tsiPLC = new ToolStripMenuItem(plc.Connection);
+                            this.tsddbPLC.DropDownItems.Add(tsiPLC);
+                           
+                                ToolStripMenuItem tsiItemGrop = new ToolStripMenuItem(string.Format("共{0}个DB块", plc.ItemsData.Count));
+                                tsiPLC.DropDownItems.Add(tsiItemGrop);
 
-        void RemoteCtrl_WorkStateChanged(JonLibrary.Automatic.RunningState state)
+                            
+                        
+                    }
+                }));
+            }
+        }
+
+        void RemoteCtrlCycle_WorkStateChanged(JonLibrary.Automatic.RunningState state)
         {
             this.BeginInvoke(new MethodInvoker(delegate
             {
@@ -187,6 +304,9 @@ namespace MicroDAQ
                 }
             }));
         }
+
+
+
 
         void UpdateCycle_WorkStateChanged(JonLibrary.Automatic.RunningState state)
         {
@@ -214,11 +334,17 @@ namespace MicroDAQ
         {
             this.btnStart.Enabled = false;
             this.Start();
+            this.btnPC.Enabled = true;
+           
         }
 
         private void btnPC_Click(object sender, EventArgs e)
         {
-            Program.opcGateway.Pause();
+            //MessageBox.Show(Program.opcGateway.RunningState.ToString());
+            if (Program.opcGateway.RunningState == Gateway.RunningState.Running)
+                Program.opcGateway.Pause();
+            else
+                Program.opcGateway.Continue();
         }
 
         private void Form2_FormClosing(object sender, FormClosingEventArgs e)
@@ -230,7 +356,6 @@ namespace MicroDAQ
                 e.Cancel = true;
             }
         }
-
 
         private void MainForm_SizeChanged(object sender, EventArgs e)
         {
@@ -250,8 +375,6 @@ namespace MicroDAQ
             if (MessageBox.Show("这将使数据采集系统退出运行状态，确定要退出吗？", "退出", MessageBoxButtons.YesNo, MessageBoxIcon.Warning)
                     == System.Windows.Forms.DialogResult.Yes)
             {
-                //if (UpdateCycle != null) UpdateCycle.SetExit = true;
-                //if (RemoteCtrl != null) RemoteCtrl.SetExit = true;
                 this.Hide();
                 Program.BeQuit = true;
                 Thread.Sleep(200);
@@ -277,16 +400,10 @@ namespace MicroDAQ
         {
             if (frmDataDisplay != null && !frmDataDisplay.IsDisposed)
                 frmDataDisplay.Show();
-
             else
             {
                 (frmDataDisplay = new DataDisplayForm()).Show();
             }
-
         }
-
-
-
     }
-
 }

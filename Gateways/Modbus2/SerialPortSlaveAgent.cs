@@ -15,6 +15,7 @@ namespace MicroDAQ.Gateways.Modbus2
     public class SerialPortSlaveAgent
     {
         ILog log;
+        public  bool tcpClientflag = true;
 
         /// <summary>
         /// 根据Master对象信息和Salve配置信息生成对象
@@ -26,45 +27,46 @@ namespace MicroDAQ.Gateways.Modbus2
             log = LogManager.GetLogger(this.GetType());
             ///上属Master相关
             this.ModbusMasterAgent = masterAgent;
-            try
-            {
-                switch (slaveInfo.type.ToUpper())
-                {
-                    case "MODBUSRTU":
-                        if (ModbusMasterAgent.MasterInfo.type.ToLower() == "tcp")
-                        {
-                            this.ModbusMasterAgent.ModbusMaster = ModbusSerialMaster.CreateRtu(slaveInfo.tcpClient);
-                        }
-                        else
-                        {
-                            this.ModbusMasterAgent.ModbusMaster = ModbusSerialMaster.CreateRtu(this.ModbusMasterAgent.SerialPort);
-                        }
-                        break;
-                    case "MODBUSASCII":
-                        if (ModbusMasterAgent.MasterInfo.type.ToLower() == "tcp")
-                        {
-                            this.ModbusMasterAgent.ModbusMaster = ModbusSerialMaster.CreateAscii(slaveInfo.tcpClient);
-                        }
-                        else
-                        {
-                            this.ModbusMasterAgent.ModbusMaster = ModbusSerialMaster.CreateAscii(this.ModbusMasterAgent.SerialPort);
-                        }
-                        break;
-                    case "MODBUSTCP":
-                        //this.ModbusMasterAgent.ModbusMaster
-                        //   = ModbusIpMaster.CreateIp(slaveInfo.tcpClient);
-                        this.TcpModbusMaster = ModbusIpMaster.CreateIp(slaveInfo.tcpClient);
-                        break;
+            this.ModbusSlaveInfo = slaveInfo;
+            //try
+            //{
+            //    switch (slaveInfo.type.ToUpper())
+            //    {
+            //        case "MODBUSRTU":
+            //            if (ModbusMasterAgent.MasterInfo.type.ToLower() == "tcp")
+            //            {
+            //                this.ModbusMasterAgent.ModbusMaster = ModbusSerialMaster.CreateRtu(slaveInfo.tcpClient);
+            //            }
+            //            else
+            //            {
+            //                this.ModbusMasterAgent.ModbusMaster = ModbusSerialMaster.CreateRtu(this.ModbusMasterAgent.SerialPort);
+            //            }
+            //            break;
+            //        case "MODBUSASCII":
+            //            if (ModbusMasterAgent.MasterInfo.type.ToLower() == "tcp")
+            //            {
+            //                this.ModbusMasterAgent.ModbusMaster = ModbusSerialMaster.CreateAscii(slaveInfo.tcpClient);
+            //            }
+            //            else
+            //            {
+            //                this.ModbusMasterAgent.ModbusMaster = ModbusSerialMaster.CreateAscii(this.ModbusMasterAgent.SerialPort);
+            //            }
+            //            break;
+            //        case "MODBUSTCP":
+            //            //this.ModbusMasterAgent.ModbusMaster
+            //            //   = ModbusIpMaster.CreateIp(slaveInfo.tcpClient);
+            //            this.TcpModbusMaster = ModbusIpMaster.CreateIp(slaveInfo.tcpClient);
+            //            break;
 
-                    default:
-                        throw new InvalidOperationException(string.Format("无法识别的Modbus从机类型-{0}", slaveInfo.type));
+            //        default:
+            //            throw new InvalidOperationException(string.Format("无法识别的Modbus从机类型-{0}", slaveInfo.type));
 
-                }
-            }
-            catch (Exception ex)
-            {
-                log.Error(new Exception("运行期间出现一个连接错误！", ex));
-            }
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    log.Error(new Exception("运行期间出现一个连接错误！", ex));
+            //}
 
             ///自身Slave相关
             this.ModbusSlaveInfo = slaveInfo;
@@ -77,7 +79,7 @@ namespace MicroDAQ.Gateways.Modbus2
             }
             for (int i = 0; i < this.Variables.Count; i++)
             {
-                Variables[i].State=(ItemState)2;
+                Variables[i].State = (ItemState)2;
             }
 
         }
@@ -128,13 +130,13 @@ namespace MicroDAQ.Gateways.Modbus2
                                                                             variable.VariableInfo.length);
                                     for (int j = 0; j < boolValue.Length; j++)
                                     {
-                                        if (boolValue[i])
+                                        if (boolValue[j])
                                         {
-                                            tmpVal[i] = 1;
+                                            tmpVal[0] = 1;
                                         }
                                         else
                                         {
-                                            tmpVal[i] = 0;
+                                            tmpVal[0] = 0;
                                         }
                                     }
                                     break;
@@ -169,13 +171,13 @@ namespace MicroDAQ.Gateways.Modbus2
                                                                             variable.VariableInfo.length);
                                     for (int j = 0; j < boolValue.Length; j++)
                                     {
-                                        if (boolValue[i])
+                                        if (boolValue[j])
                                         {
-                                            tmpVal[i] = 1;
+                                            tmpVal[0] = 1;
                                         }
                                         else
                                         {
-                                            tmpVal[i] = 0;
+                                            tmpVal[0] = 0;
                                         }
                                     }
                                     break;
@@ -193,10 +195,10 @@ namespace MicroDAQ.Gateways.Modbus2
                                 switch (variable.VariableInfo.length)
                                 {
                                     case 1:
-                                        variable.Value = tmpVal[0];
+                                        Variables[i].Value = tmpVal[0];
                                         break;
                                     case 2:
-                                        variable.Value = ModbusUtility.GetUInt32(tmpVal[0], tmpVal[1]);
+                                        Variables[i].Value = ModbusUtility.GetUInt32(tmpVal[0], tmpVal[1]);
                                         break;
                                     case 4:
                                         byte[] byte1 = BitConverter.GetBytes(tmpVal[0]);
@@ -204,32 +206,36 @@ namespace MicroDAQ.Gateways.Modbus2
                                         byte[] byte3 = BitConverter.GetBytes(tmpVal[2]);
                                         byte[] byte4 = BitConverter.GetBytes(tmpVal[3]);
                                         byte[] bytes = new byte[8] { byte1[0], byte1[1], byte2[0], byte2[1], byte3[0], byte3[1], byte4[0], byte4[1] };
-                                        variable.Value = BitConverter.ToInt64(bytes, 0);
+                                        Variables[i].Value = BitConverter.ToInt64(bytes, 0);
                                         break;
                                     default:
                                         throw new NotImplementedException(string.Format("无法识别的数据类型-{0}", variable.VariableInfo.dataType));
                                 }
                                 break;
                             case "real":
-                               
-                                    variable.Value = ModbusUtility.GetSingle(tmpVal[0], tmpVal[1]);
-                                
+                                Variables[i].Value = ModbusUtility.GetSingle(tmpVal[0], tmpVal[1]);
                                 break;
-                            case "Discrete":
-                                variable.Value = tmpVal[0];
+                            case "discrete":
+                                Variables[i].Value = tmpVal[0];
                                 break;
                             default:
                                 throw new NotImplementedException(string.Format("无法识别的数据类型-{0}", variable.VariableInfo.dataType));
                         }
-                        variable.State = (ItemState)1;
+                       
                     }
 
-
+                    Variables[i].State = (ItemState)1;
                 }
             }
             catch (Exception ex)
             {
                 log.Error(new Exception("运行期间出现一个连接错误！", ex));
+                tcpClientflag = false;
+                for (int i = 0; i < this.Variables.Count; i++)
+                {
+                    Variables[i].State = (ItemState)2;
+                }
+                
             }
         }
         /// <summary>
@@ -300,7 +306,64 @@ namespace MicroDAQ.Gateways.Modbus2
             }
         }
         public void ReadWrite()
-        {     
+        {
+            //for (int i = 0; i < this.Variables.Count; i++)
+            //{
+            //    Variables[i].State = (ItemState)2;
+            //}
+            try
+            {
+                switch (ModbusSlaveInfo.type.ToUpper())
+                {
+                    case "MODBUSRTU":
+                        if (this.ModbusMasterAgent.ModbusMaster == null)
+                        {
+                            if (ModbusMasterAgent.MasterInfo.type.ToLower() == "tcp")
+                            {                             
+                                    this.ModbusMasterAgent.ModbusMaster = ModbusSerialMaster.CreateRtu(ModbusSlaveInfo.tcpClient);                                                   
+                            }
+                            else
+                            {
+                                this.ModbusMasterAgent.ModbusMaster = ModbusSerialMaster.CreateRtu(this.ModbusMasterAgent.SerialPort);
+                            }
+                        }
+                        break;
+                    case "MODBUSASCII":
+                        if (this.ModbusMasterAgent.ModbusMaster == null)
+                        {
+                            if (ModbusMasterAgent.MasterInfo.type.ToLower() == "tcp")
+                            {                               
+                              this.ModbusMasterAgent.ModbusMaster = ModbusSerialMaster.CreateAscii(ModbusSlaveInfo.tcpClient);
+                                                           
+                            }
+                            else
+                            {
+                                this.ModbusMasterAgent.ModbusMaster = ModbusSerialMaster.CreateAscii(this.ModbusMasterAgent.SerialPort);
+                            }
+                        }
+                        break;
+                    case "MODBUSTCP":
+                        //this.ModbusMasterAgent.ModbusMaster
+                        //   = ModbusIpMaster.CreateIp(slaveInfo.tcpClient);
+                       
+                        this.TcpModbusMaster = ModbusIpMaster.CreateIp(ModbusSlaveInfo.tcpClient);
+                        TcpModbusMaster.Transport.ReadTimeout = 300;
+                        tcpClientflag = true;
+                           
+                        
+                        break;
+
+                    default:
+                        throw new InvalidOperationException(string.Format("无法识别的Modbus从机类型-{0}", ModbusSlaveInfo.type));
+
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error(new Exception("运行期间出现一个连接错误！", ex));
+                tcpClientflag = false;
+                return;
+            }
             Write();
             Read();
         }
@@ -326,11 +389,12 @@ namespace MicroDAQ.Gateways.Modbus2
  
         }
 
-        public MicroDAQ.Configuration.ModbusSlaveInfo ModbusSlaveInfo { get; set; }
+      
 
         public IList<MicroDAQ.Gateways.Modbus2.ModbusVariable> Variables { get; set; }
 
         public MicroDAQ.Gateways.Modbus2.ModbusMasterAgent ModbusMasterAgent { get; set; }
+        public ModbusSlaveInfo ModbusSlaveInfo { get; set; }
 
         public IModbusMaster TcpModbusMaster { get; set; }
     }
